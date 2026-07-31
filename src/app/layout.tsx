@@ -51,6 +51,12 @@ export default function RootLayout({
                 >
                   Sandbox
                 </Link>
+                <Link
+                  href="/upload"
+                  className="text-sm font-medium text-neutral-400 hover:text-neutral-100 transition-colors tracking-wide"
+                >
+                  Upload
+                </Link>
               </nav>
             </div>
           </div>
