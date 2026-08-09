@@ -20,6 +20,7 @@ export const DEFAULT_SONG_JSON = `{
       4
     ],
     "style": "chord-chart-with-lyrics",
+    "sheetType": "chord-lyrics",
     "notes": [
       "Beat positions are inferred from chord chart bars and dot spacing, not from full musical notation.",
       "A measure with no chord symbol continues the previous chord."

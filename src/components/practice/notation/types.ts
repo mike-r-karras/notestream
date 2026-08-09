@@ -1,0 +1,46 @@
+export type StandardNotationMeasure = {
+  id?: string;
+  number?: number;
+  attributes?: {
+    divisions?: number;
+    time?: { beats?: number; beatType?: number; beat_type?: number } | null;
+    key?: { fifths?: number; mode?: string | null } | null;
+    clef?: { sign?: string; line?: number | null } | null;
+    clefs?: Record<string, { sign?: string; line?: number | null }>;
+  };
+  voices?: Array<{
+    id?: string;
+    number?: number;
+    staff?: number;
+    events?: StandardNotationEvent[];
+  }>;
+};
+
+export type StandardNotationEvent = {
+  id?: string;
+  type?: string;
+  staff?: number;
+  voice?: number;
+  startQuarterNotes?: number;
+  start_quarter_notes?: number;
+  duration?: {
+    quarterNotes?: number;
+    quarter_notes?: number;
+    vexflow?: string;
+    dots?: number;
+  };
+  pitches?: Array<{
+    step?: string;
+    octave?: number;
+    alter?: number;
+  }>;
+  accidentals?: Array<string | null> | null;
+};
+
+export type StandardNotationVoice =
+  NonNullable<StandardNotationMeasure['voices']>[number];
+
+export type NotationTheme = {
+  foreground: string;
+  staff: string;
+};
