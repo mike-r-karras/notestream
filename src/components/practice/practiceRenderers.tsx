@@ -13,6 +13,7 @@ export interface PracticeRenderContext {
   offsetX: number;
   segments: PositionedSegment[];
   parsedInst?: InstrumentConfig | null;
+  onRenderedNotes?: (notes: Map<string, SVGElement>) => void;
 }
 
 export interface ChordLyricsSegmentPayload {
@@ -315,8 +316,13 @@ export const notationPracticeRenderer: PracticeRenderer & {
   },
 
   renderContinuous(document, segments, context): React.ReactNode {
-    void context;
-    return <ContinuousNotation document={document} segments={segments} />;
+    return (
+      <ContinuousNotation
+        document={document}
+        segments={segments}
+        onRenderedNotes={context.onRenderedNotes}
+      />
+    );
   },
 
   renderSegment(segment: PositionedSegment): React.ReactNode {

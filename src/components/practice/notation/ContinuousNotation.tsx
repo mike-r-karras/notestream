@@ -9,7 +9,7 @@ import {
   normalizeVoicesForStaff,
   readBeatType,
 } from './scoreModel';
-import { getNotationMeasures } from './timeline';
+import { getNotationMeasures, notationEventId } from './timeline';
 import { notationThemeStyle, readNotationTheme } from './theme';
 import {
   accidentalFromAlter,
@@ -25,9 +25,11 @@ import {
 export function ContinuousNotation({
   document,
   segments,
+  onRenderedNotes,
 }: {
   document: EasyScoreDocument;
   segments: PositionedSegment[];
+  onRenderedNotes?: (notes: Map<string, SVGElement>) => void;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
 
@@ -86,6 +88,10 @@ export function ContinuousNotation({
       const vfRenderer = new Renderer(liveHost, Renderer.Backends.SVG);
       vfRenderer.resize(totalWidth, height);
       const context = vfRenderer.getContext();
+      const renderedNoteElements: Array<{
+        id: string;
+        note: InstanceType<typeof StaveNote>;
+      }> = [];
 
       measures.forEach((measure, measureIndex) => {
         const segment = segments[measureIndex];
@@ -238,6 +244,17 @@ export function ContinuousNotation({
               note.setStave(stave);
 
               if (!isRest) {
+                renderedNoteElements.push({
+                  id: notationEventId(
+                    measure.id ?? `notation-measure-${measure.number ?? measureIndex + 1}`,
+                    sourceVoice,
+                    event
+                  ),
+                  note,
+                });
+              }
+
+              if (!isRest) {
                 (event.pitches ?? []).forEach((pitch, pitchIndex) => {
                   const written = event.accidentals?.[pitchIndex];
                   let accidental = accidentalToVex(written);
@@ -367,6 +384,19 @@ export function ContinuousNotation({
       });
 
       const svg = liveHost.querySelector('svg');
+      const noteRegistry = new Map<string, SVGElement>();
+      renderedNoteElements.forEach(({ id, note }) => {
+        const element = note.getSVGElement();
+        if (!element) return;
+        const overlay = element.cloneNode(true) as SVGElement;
+        overlay.querySelectorAll('[id]').forEach(child => child.removeAttribute('id'));
+        overlay.removeAttribute('id');
+        overlay.setAttribute('data-notestream-event-id', id);
+        overlay.classList.add('notestream-playback-overlay');
+        element.parentNode?.insertBefore(overlay, element.nextSibling);
+        noteRegistry.set(id, overlay);
+      });
+      onRenderedNotes?.(noteRegistry);
       console.log('[Notestream VexFlow v5.2-spacing] grand-staff draw complete', {
         svgPresent: !!svg,
         svgWidth: svg?.getAttribute('width'),
@@ -381,8 +411,9 @@ export function ContinuousNotation({
 
     return () => {
       cancelled = true;
+      onRenderedNotes?.(new Map());
     };
-  }, [document, segments]);
+  }, [document, segments, onRenderedNotes]);
 
   const totalWidth = Math.max(
     1,
@@ -402,4 +433,3 @@ export function ContinuousNotation({
     />
   );
 }
-

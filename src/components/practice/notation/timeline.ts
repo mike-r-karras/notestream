@@ -3,7 +3,11 @@ import type {
   PracticeEvent,
   PracticeSegment,
 } from '../../../utils/practiceTimeline';
-import type { StandardNotationMeasure } from './types';
+import type {
+  StandardNotationEvent,
+  StandardNotationMeasure,
+  StandardNotationVoice,
+} from './types';
 import {
   eventDurationQuarter,
   eventStartQuarter,
@@ -12,6 +16,22 @@ import {
 import { getMeasureWidth } from './layout';
 
 export const TICKS_PER_QUARTER = 480;
+
+export function notationEventId(
+  measureId: string,
+  voice: StandardNotationVoice,
+  event: StandardNotationEvent
+): string {
+  if (event.id) return event.id;
+  const staff = event.staff ?? voice.staff ?? 1;
+  const voiceNumber = event.voice ?? voice.number ?? 1;
+  const start = eventStartQuarter(event).toFixed(6);
+  const duration = eventDurationQuarter(event).toFixed(6);
+  const pitches = (event.pitches ?? [])
+    .map(pitch => `${pitch.step ?? ''}${pitch.alter ?? 0}/${pitch.octave ?? ''}`)
+    .join(',');
+  return `${measureId}-s${staff}-v${voiceNumber}-t${start}-d${duration}-${event.type ?? 'note'}-${pitches}`;
+}
 
 export function getNotationMeasures(
   document: EasyScoreDocument
@@ -51,10 +71,9 @@ export function buildNotationTimeline(
 
     for (const voice of measure.voices ?? []) {
       for (const event of voice.events ?? []) {
+        const eventId = notationEventId(measureId, voice, event);
         events.push({
-          id:
-            event.id ??
-            `${measureId}-event-${events.length}`,
+          id: eventId,
           startTick:
             startTick +
             Math.round(
@@ -68,7 +87,7 @@ export function buildNotationTimeline(
           ),
           measure: number,
           kind: event.type === 'rest' ? 'rest' : 'note',
-          sourceIds: event.id ? [event.id] : [measureId],
+          sourceIds: [eventId],
         });
       }
     }

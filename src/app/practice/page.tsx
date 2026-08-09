@@ -9,6 +9,14 @@ import { DEFAULT_SONG_JSON, DEFAULT_INSTRUMENT_JSON } from "../sandbox/defaultDa
 import { EasyScoreDocument } from "../../types/easyScore";
 import { PositionedSegment, positionSegments, tickToX, xToTick } from "../../utils/practiceTimeline";
 import { selectPracticeRenderer } from "../../components/practice/practiceRenderers";
+import {
+  activeNoteIdsAtTick,
+  beatsCrossed,
+  buildNotationPlaybackModel,
+  elapsedMsToTick,
+  tickToElapsedMs,
+} from "../../components/practice/playbackModel";
+import { PianoNoteOutput } from "../../components/practice/pianoNoteOutput";
 
 export interface Folder {
   id: number;
@@ -123,16 +131,26 @@ function PracticePageContent() {
   // Auto-scroll / Metronome States
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [bpm, setBpm] = useState<number>(100);
+  const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
   const [beatCount, setBeatCount] = useState<number>(0);
+  const [beatMeasure, setBeatMeasure] = useState<number>(0);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [currentTick, setCurrentTick] = useState<number>(0);
+  const [renderedNotes, setRenderedNotes] = useState<Map<string, SVGElement>>(new Map());
 
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
   const isPlayingRef = useRef<boolean>(false);
-  const lastTimeRef = useRef<number>(0);
+  const playbackStartTimeRef = useRef<number>(0);
+  const playbackStartElapsedRef = useRef<number>(0);
+  const includeStartingBeatRef = useRef<boolean>(false);
+  const renderedNotesRef = useRef<Map<string, SVGElement>>(new Map());
+  const highlightedIdsRef = useRef<Set<string>>(new Set());
+  const playbackHasStartedRef = useRef<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const pianoOutputRef = useRef<PianoNoteOutput | null>(null);
+  const scheduledToneIdsRef = useRef<Set<string>>(new Set());
 
   // Load and Persist State for Storage Panel
   useEffect(() => {
@@ -328,6 +346,47 @@ function PracticePageContent() {
     return positionSegments(segments, 0); // No gap between measure-sized segments to appear continuous
   }, [parsedSong, renderer]);
 
+  const playbackModel = useMemo(
+    () => parsedSong
+      ? buildNotationPlaybackModel(parsedSong)
+      : { measures: [], notes: [], tones: [], beats: [], totalTicks: 0 },
+    [parsedSong]
+  );
+
+  const clearHighlights = useCallback(() => {
+    highlightedIdsRef.current.forEach(id => {
+      renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+    });
+    highlightedIdsRef.current = new Set();
+  }, []);
+
+  const applyHighlights = useCallback((tick: number) => {
+    const nextIds = activeNoteIdsAtTick(playbackModel.notes, tick);
+    highlightedIdsRef.current.forEach(id => {
+      if (!nextIds.has(id)) {
+        renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+      }
+    });
+    nextIds.forEach(id => {
+      if (!highlightedIdsRef.current.has(id)) {
+        renderedNotesRef.current.get(id)?.classList.add("notestream-playback-active");
+      }
+    });
+    highlightedIdsRef.current = nextIds;
+  }, [playbackModel.notes]);
+
+  const handleRenderedNotes = useCallback((notes: Map<string, SVGElement>) => {
+    setRenderedNotes(notes);
+  }, []);
+
+  useEffect(() => {
+    clearHighlights();
+    renderedNotesRef.current = renderedNotes;
+    if (playbackHasStartedRef.current) {
+      applyHighlights(currentTickRef.current);
+    }
+  }, [applyHighlights, clearHighlights, renderedNotes]);
+
   // Compute uniqueChords and totalBeats on the fly
   const songData = useMemo(() => {
     if (!parsedSong) {
@@ -371,13 +430,18 @@ function PracticePageContent() {
       Promise.resolve().then(() => {
         setOffsetX(0);
         setBeatCount(0);
+        setBeatMeasure(0);
         setIsPlaying(false);
         setCurrentTick(0);
         currentTickRef.current = 0;
         displayXRef.current = 0;
+        playbackHasStartedRef.current = false;
+        pianoOutputRef.current?.allNotesOff();
+        scheduledToneIdsRef.current.clear();
+        clearHighlights();
       });
     }
-  }, [activeScore]);
+  }, [activeScore, clearHighlights]);
 
   // Helper function to render vexchords inside all container placeholders
   const renderChordDiagrams = useCallback(() => {
@@ -482,12 +546,16 @@ function PracticePageContent() {
   };
 
   // Sound generator for Metronome Click
-  const playClick = (isFirstBeat: boolean) => {
+  const getAudioContext = useCallback(() => {
+    if (!audioContextRef.current) {
+      audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    }
+    return audioContextRef.current;
+  }, []);
+
+  const playClick = useCallback((isFirstBeat: boolean) => {
     try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
+      const ctx = getAudioContext();
       if (ctx.state === "suspended") {
         ctx.resume();
       }
@@ -512,13 +580,9 @@ function PracticePageContent() {
     } catch (e) {
       console.warn("AudioContext metronome click failed to play: ", e);
     }
-  };
+  }, [getAudioContext]);
 
-  const totalTicks = useMemo(() => {
-    if (positionedSegments.length === 0) return 0;
-    const last = positionedSegments[positionedSegments.length - 1];
-    return last.startTick + last.durationTicks;
-  }, [positionedSegments]);
+  const totalTicks = playbackModel.totalTicks;
 
   // Sync refs
   useEffect(() => {
@@ -527,41 +591,83 @@ function PracticePageContent() {
 
   useEffect(() => {
     if (isPlaying) {
-      lastTimeRef.current = performance.now();
+      const now = performance.now();
+      playbackStartTimeRef.current = now;
+      playbackStartElapsedRef.current = tickToElapsedMs(
+        playbackModel,
+        currentTickRef.current,
+        bpm
+      );
+      includeStartingBeatRef.current = true;
     }
-  }, [isPlaying]);
+  }, [isPlaying, bpm, playbackModel]);
 
   useEffect(() => {
     let animId: number;
     
-    const ticksPerBeat = 480;
-    const ticksPerSecond = (bpm / 60) * ticksPerBeat;
-    const ticksPerMs = ticksPerSecond / 1000;
-
     const loop = (time: number) => {
       if (!isPlayingRef.current) return;
 
-      const deltaMs = time - lastTimeRef.current;
-      lastTimeRef.current = time;
-
       const currentT = currentTickRef.current;
-      const nextT = Math.min(totalTicks, currentT + deltaMs * ticksPerMs);
+      const nextT = elapsedMsToTick(
+        playbackModel,
+        playbackStartElapsedRef.current + time - playbackStartTimeRef.current,
+        bpm
+      );
 
-      // Check if we crossed beat boundary
-      const currentBeatIdx = Math.floor(currentT / ticksPerBeat);
-      const nextBeatIdx = Math.floor(nextT / ticksPerBeat);
+      const crossedBeats = beatsCrossed(
+        playbackModel,
+        currentT,
+        nextT,
+        includeStartingBeatRef.current
+      );
+      const includeCurrentPosition = includeStartingBeatRef.current;
+      includeStartingBeatRef.current = false;
 
-      if (nextBeatIdx > currentBeatIdx) {
-        setIsFlashing(true);
-        setTimeout(() => setIsFlashing(false), 80);
+      if (crossedBeats.length > 0) {
+        if (playbackMode === "metronome") {
+          setIsFlashing(true);
+          setTimeout(() => setIsFlashing(false), 80);
+          crossedBeats.forEach(beat => playClick(beat.accent));
+        }
+        const latestBeat = crossedBeats[crossedBeats.length - 1];
+        setBeatMeasure(latestBeat.measure);
+        setBeatCount(latestBeat.beat + 1);
+      }
 
-        const isFirstBeat = nextBeatIdx % 4 === 0;
-        playClick(isFirstBeat);
+      if (playbackMode === "tonal") {
+        const ctx = getAudioContext();
+        if (!pianoOutputRef.current) {
+          pianoOutputRef.current = new PianoNoteOutput(ctx);
+        }
+        playbackModel.tones.forEach(tone => {
+          if (scheduledToneIdsRef.current.has(tone.id)) return;
+          const toneEndTick = tone.startTick + tone.durationTicks;
+          const startsInFrame =
+            tone.startTick > currentT && tone.startTick <= nextT;
+          const activeAtResume =
+            includeCurrentPosition &&
+            tone.startTick <= currentT &&
+            currentT < toneEndTick;
+          if (!startsInFrame && !activeAtResume) return;
+
+          const audibleStartTick = Math.max(currentT, tone.startTick);
+          const durationSeconds = Math.max(
+            0.04,
+            (tickToElapsedMs(playbackModel, toneEndTick, bpm) -
+              tickToElapsedMs(playbackModel, audibleStartTick, bpm)) / 1000
+          );
+          pianoOutputRef.current?.playNote(
+            tone.midiNote,
+            ctx.currentTime,
+            durationSeconds
+          );
+          scheduledToneIdsRef.current.add(tone.id);
+        });
       }
 
       currentTickRef.current = nextT;
-      setCurrentTick(nextT);
-      setBeatCount(nextBeatIdx + 1);
+      applyHighlights(nextT);
 
       // LERP/Smooth the visual scroll offset
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
@@ -593,6 +699,12 @@ function PracticePageContent() {
         displayXRef.current = 0;
         setOffsetX(0);
         setBeatCount(0);
+        setBeatMeasure(0);
+        playbackHasStartedRef.current = false;
+        pianoOutputRef.current?.allNotesOff();
+        scheduledToneIdsRef.current.clear();
+        clearHighlights();
+        void audioContextRef.current?.suspend();
       } else {
         animId = requestAnimationFrame(loop);
       }
@@ -605,7 +717,7 @@ function PracticePageContent() {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [isPlaying, bpm, totalTicks, positionedSegments]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isPlaying, playbackMode, playbackModel, playClick, positionedSegments, totalTicks]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
@@ -893,6 +1005,7 @@ function PracticePageContent() {
                         offsetX,
                         segments: positionedSegments,
                         parsedInst,
+                        onRenderedNotes: handleRenderedNotes,
                       })}
                     </div>
                   </div>
@@ -967,10 +1080,10 @@ function PracticePageContent() {
       </div>
 
       {/* 3. BOTTOM PANE: Practice Dashboard & Unique Chord Dictionary */}
-      <div className="h-[180px] border-t border-neutral-800 bg-neutral-900/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row gap-6 shrink-0 shadow-[0_-4px_15px_rgba(0,0,0,0.5)] z-20">
+      <div className="h-[200px] border-t border-neutral-800 bg-neutral-900/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row gap-6 shrink-0 shadow-[0_-4px_15px_rgba(0,0,0,0.5)] z-20">
         
         {/* Practice Playback Control Console */}
-        <div className="md:w-1/3 flex flex-col justify-between shrink-0 border-r border-neutral-850 md:pr-6 gap-3">
+        <div className="md:w-1/3 flex flex-col justify-between shrink-0 border-r border-neutral-850 md:pr-6 gap-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
               Practice controls
@@ -981,25 +1094,71 @@ function PracticePageContent() {
               <div className="flex items-center gap-1.5">
                 <span className={`w-2.5 h-2.5 rounded-full ${isFlashing ? "bg-indigo-500 scale-125 shadow-[0_0_12px_rgba(99,102,241,0.8)]" : "bg-neutral-800"} transition-all duration-75`} />
                 <span className="text-[9.5px] font-mono font-extrabold text-neutral-500">
-                  {Math.floor((beatCount - 1) / 4) + 1}:{((beatCount - 1) % 4) + 1}
+                  {beatMeasure}:{beatCount}
                 </span>
               </div>
             )}
+          </div>
+
+          <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-950/70 p-1 border border-neutral-800">
+            {([
+              ["highlight", "Highlight"],
+              ["metronome", "Metronome"],
+              ["tonal", "Tonal"],
+            ] as const).map(([mode, label]) => (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => {
+                  pianoOutputRef.current?.allNotesOff();
+                  scheduledToneIdsRef.current.clear();
+                  setIsFlashing(false);
+                  setPlaybackMode(mode);
+                  if (isPlaying && mode !== "highlight") {
+                    const ctx = getAudioContext();
+                    void ctx.resume();
+                  }
+                  if (isPlaying) {
+                    includeStartingBeatRef.current = true;
+                  }
+                }}
+                disabled={totalTicks === 0}
+                className={`rounded-md px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide transition-colors disabled:opacity-40 ${
+                  playbackMode === mode
+                    ? "bg-indigo-600 text-white"
+                    : "text-neutral-500 hover:bg-neutral-800 hover:text-neutral-200"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
           </div>
 
           {/* Controls Button Row */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => {
-                if (flattenedMeasures.length > 0) {
+                if (totalTicks > 0) {
                   const nextPlaying = !isPlaying;
+                  if (nextPlaying) {
+                    playbackHasStartedRef.current = true;
+                    scheduledToneIdsRef.current.clear();
+                    if (playbackMode !== "highlight") {
+                      const ctx = getAudioContext();
+                      void ctx.resume();
+                    }
+                  }
                   setIsPlaying(nextPlaying);
                   if (!nextPlaying) {
                     setIsFlashing(false);
+                    setCurrentTick(currentTickRef.current);
+                    pianoOutputRef.current?.allNotesOff();
+                    scheduledToneIdsRef.current.clear();
+                    void audioContextRef.current?.suspend();
                   }
                 }
               }}
-              disabled={flattenedMeasures.length === 0}
+              disabled={totalTicks === 0}
               className={`flex-1 py-3 rounded-xl text-xs font-black uppercase tracking-wider transition-all active:scale-95 flex items-center justify-center gap-2 shadow-md ${
                 isPlaying
                   ? "bg-rose-600 hover:bg-rose-500 text-neutral-100 shadow-rose-600/10 border border-rose-500/20"
@@ -1011,14 +1170,14 @@ function PracticePageContent() {
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path fillRule="evenodd" d="M3 10a.75.75 0 01.75-.75h12.5a.75.75 0 010 1.5H3.75A.75.75 0 013 10z" clipRule="evenodd" />
                   </svg>
-                  Pause Stream
+                  Pause Score
                 </>
               ) : (
                 <>
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4">
                     <path fillRule="evenodd" d="M2 10a8 8 0 1116 0 8 8 0 01-16 0zm6.39-2.908a.75.75 0 01.766.027l3.5 2.25a.75.75 0 010 1.262l-3.5 2.25A.75.75 0 018 12.25v-4.5a.75.75 0 01.39-.658z" clipRule="evenodd" />
                   </svg>
-                  Auto-Scroll
+                  Play Score
                 </>
               )}
             </button>
@@ -1027,10 +1186,20 @@ function PracticePageContent() {
               onClick={() => {
                 setOffsetX(0);
                 setBeatCount(0);
+                setBeatMeasure(0);
                 setIsPlaying(false);
                 setIsFlashing(false);
+                currentTickRef.current = 0;
+                setCurrentTick(0);
+                displayXRef.current = 0;
+                includeStartingBeatRef.current = false;
+                playbackHasStartedRef.current = false;
+                pianoOutputRef.current?.allNotesOff();
+                scheduledToneIdsRef.current.clear();
+                clearHighlights();
+                void audioContextRef.current?.suspend();
               }}
-              disabled={flattenedMeasures.length === 0}
+              disabled={totalTicks === 0}
               className="p-3 bg-neutral-800 hover:bg-neutral-750 disabled:bg-neutral-850 text-neutral-300 disabled:text-neutral-700 rounded-xl border border-neutral-750 disabled:border-transparent transition-all active:scale-95"
               title="Reset Practice playback playhead to start"
             >
@@ -1054,7 +1223,12 @@ function PracticePageContent() {
               max="200"
               value={bpm}
               disabled={flattenedMeasures.length === 0}
-              onChange={(e) => setBpm(parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                pianoOutputRef.current?.allNotesOff();
+                scheduledToneIdsRef.current.clear();
+                includeStartingBeatRef.current = isPlaying;
+                setBpm(parseInt(e.target.value, 10));
+              }}
               className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none disabled:opacity-50"
             />
           </div>

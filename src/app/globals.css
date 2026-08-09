@@ -1,5 +1,25 @@
 @import "tailwindcss";
 
+.notestream-playback-overlay {
+  display: none;
+  pointer-events: none;
+}
+
+.notestream-playback-overlay.notestream-playback-active {
+  display: inline;
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(48%)
+    sepia(93%)
+    saturate(2665%)
+    hue-rotate(199deg)
+    brightness(101%)
+    contrast(94%)
+    drop-shadow(0 0 3px #60a5fa)
+    drop-shadow(0 0 8px rgba(59, 130, 246, 0.9));
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;

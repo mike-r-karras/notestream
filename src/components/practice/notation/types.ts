@@ -34,6 +34,10 @@ export type StandardNotationEvent = {
     octave?: number;
     alter?: number;
   }>;
+  pitchNotations?: Array<{
+    ties?: Array<{ type?: string }>;
+    slurs?: Array<{ number?: number; type?: string }>;
+  }> | null;
   accidentals?: Array<string | null> | null;
 };
 
