@@ -12,6 +12,7 @@ import {
   notationEventId,
   TICKS_PER_QUARTER,
 } from './notation/timeline';
+import type { PlaybackSequence } from './playbackResolver';
 
 export type PlaybackNoteEvent = {
   id: string;
@@ -37,6 +38,7 @@ export type PlaybackBeatEvent = {
 
 export type PlaybackMeasure = {
   number: number;
+  sourceMeasureIndex: number;
   startTick: number;
   durationTicks: number;
   beats: number;
@@ -50,6 +52,11 @@ export type NotationPlaybackModel = {
   tones: PlaybackToneEvent[];
   beats: PlaybackBeatEvent[];
   totalTicks: number;
+};
+
+export type PlaybackPosition = {
+  measure: PlaybackMeasure;
+  offsetTicks: number;
 };
 
 function positiveInteger(value: number | undefined): number | undefined {
@@ -92,12 +99,23 @@ function playbackMeasureQuarterNotes(
 }
 
 export function buildNotationPlaybackModel(
-  document: EasyScoreDocument
+  document: EasyScoreDocument,
+  sequence?: PlaybackSequence
 ): NotationPlaybackModel {
   const sourceMeasures = getNotationMeasures(document);
   const metadataTime = document.metadata?.timeSignature;
   let inheritedBeats = positiveInteger(metadataTime?.[0]) ?? 4;
   let inheritedBeatType = positiveInteger(metadataTime?.[1]) ?? 4;
+  const sourceTimes = sourceMeasures.map(measure => {
+    const declaredTime = measure.attributes?.time;
+    inheritedBeats = positiveInteger(declaredTime?.beats) ?? inheritedBeats;
+    inheritedBeatType = declaredTime
+      ? readBeatType(declaredTime)
+      : inheritedBeatType;
+    return { beats: inheritedBeats, beatType: inheritedBeatType };
+  });
+  const playbackOrder = sequence?.measures.map(entry => entry.sourceMeasureIndex)
+    ?? sourceMeasures.map((_, index) => index);
   let startTick = 0;
   const measures: PlaybackMeasure[] = [];
   const notes: PlaybackNoteEvent[] = [];
@@ -105,43 +123,56 @@ export function buildNotationPlaybackModel(
   const openTies = new Map<string, PlaybackToneEvent>();
   const beats: PlaybackBeatEvent[] = [];
 
-  sourceMeasures.forEach((measure, measureIndex) => {
-    const declaredTime = measure.attributes?.time;
-    inheritedBeats = positiveInteger(declaredTime?.beats) ?? inheritedBeats;
-    inheritedBeatType = declaredTime
-      ? readBeatType(declaredTime)
-      : inheritedBeatType;
+  let previousContinuityIndex: number | undefined;
+  playbackOrder.forEach((sourceMeasureIndex, playbackIndex) => {
+    const measure = sourceMeasures[sourceMeasureIndex];
+    if (!measure) return;
+    const {
+      beats: measureBeats,
+      beatType: measureBeatType,
+    } = sourceTimes[sourceMeasureIndex];
+
+    const continuityIndex = measure.playbackPresentation?.sourceMeasureIndex
+      ?? sourceMeasureIndex;
+    if (
+      previousContinuityIndex !== undefined &&
+      continuityIndex !== previousContinuityIndex + 1
+    ) {
+      openTies.clear();
+    }
+    previousContinuityIndex = continuityIndex;
 
     const durationTicks = Math.max(
       1,
       Math.round(
         playbackMeasureQuarterNotes(
           measure,
-          inheritedBeats,
-          inheritedBeatType
+          measureBeats,
+          measureBeatType
         ) * TICKS_PER_QUARTER
       )
     );
-    const beatTicks = TICKS_PER_QUARTER * (4 / inheritedBeatType);
-    const measureNumber = measure.number ?? measureIndex + 1;
-    const pickupOffsetQuarterNotes = measureIndex === 0
+    const beatTicks = TICKS_PER_QUARTER * (4 / measureBeatType);
+    const measureNumber = measure.number ?? sourceMeasureIndex + 1;
+    const pickupOffsetQuarterNotes = sourceMeasureIndex === 0
       ? getOpeningPickupOffsetQuarterNotes(
           measure,
-          inheritedBeats,
-          inheritedBeatType
+          measureBeats,
+          measureBeatType
         )
       : 0;
 
     measures.push({
       number: measureNumber,
+      sourceMeasureIndex,
       startTick,
       durationTicks,
-      beats: inheritedBeats,
-      beatType: inheritedBeatType,
+      beats: measureBeats,
+      beatType: measureBeatType,
       beatTicks,
     });
 
-    for (let beat = 0; beat < inheritedBeats; beat += 1) {
+    for (let beat = 0; beat < measureBeats; beat += 1) {
       const tick = startTick + Math.round(beat * beatTicks);
       if (tick < startTick + durationTicks) {
         beats.push({
@@ -199,7 +230,7 @@ export function buildNotationPlaybackModel(
             );
           } else {
             tone = {
-              id: `${eventId}-pitch-${pitchIndex}`,
+              id: `${eventId}${sequence ? `-playback-${playbackIndex}` : ''}-pitch-${pitchIndex}`,
               midiNote,
               startTick: eventStartTick,
               durationTicks: eventDurationTicks,
@@ -235,6 +266,26 @@ export function activeNoteIdsAtTick(
       )
       .map(note => note.id)
   );
+}
+
+export function playbackPositionAtTick(
+  model: NotationPlaybackModel,
+  tick: number
+): PlaybackPosition | undefined {
+  if (model.measures.length === 0) return undefined;
+  const clampedTick = Math.max(0, Math.min(tick, model.totalTicks));
+  const measure = model.measures.find(item =>
+    clampedTick >= item.startTick &&
+    clampedTick < item.startTick + item.durationTicks
+  ) ?? model.measures[model.measures.length - 1];
+
+  return {
+    measure,
+    offsetTicks: Math.max(
+      0,
+      Math.min(clampedTick - measure.startTick, measure.durationTicks)
+    ),
+  };
 }
 
 export function tickToElapsedMs(

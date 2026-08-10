@@ -14,6 +14,27 @@ export type StandardNotationMeasure = {
     staff?: number;
     events?: StandardNotationEvent[];
   }>;
+  barlines?: StandardNotationBarline[];
+  playbackPresentation?: {
+    playbackIndex: number;
+    repeatPass: number;
+    sourceMeasureId: string;
+    sourceMeasureIndex: number;
+    ghostRepeatSigns: boolean;
+  };
+};
+
+export type StandardNotationBarline = {
+  location?: 'left' | 'right' | string;
+  style?: string;
+  ending?: {
+    number?: string;
+    type?: 'start' | 'stop' | 'discontinue' | string;
+  };
+  repeat?: {
+    direction?: 'forward' | 'backward' | string;
+    times?: number;
+  };
 };
 
 export type StandardNotationEvent = {

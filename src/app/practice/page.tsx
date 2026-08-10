@@ -14,9 +14,12 @@ import {
   beatsCrossed,
   buildNotationPlaybackModel,
   elapsedMsToTick,
+  playbackPositionAtTick,
   tickToElapsedMs,
 } from "../../components/practice/playbackModel";
+import { resolvePlaybackSequence } from "../../components/practice/playbackResolver";
 import { PianoNoteOutput } from "../../components/practice/pianoNoteOutput";
+import { buildInlinePlaybackDocument } from "../../components/practice/inlinePlayback";
 
 export interface Folder {
   id: number;
@@ -85,6 +88,9 @@ export interface InstrumentConfig {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
+const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
+
+type PracticeRepeatMode = "inline" | "scrollback";
 
 export default function PracticePage() {
   return (
@@ -134,6 +140,14 @@ function PracticePageContent() {
   const [volume, setVolume] = useState<number>(100);
   const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
+  const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
+  const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>(() => {
+    if (typeof window === "undefined") return "scrollback";
+    const savedRepeatMode = localStorage.getItem(PRACTICE_REPEAT_MODE_STORAGE_KEY);
+    return savedRepeatMode === "inline" || savedRepeatMode === "scrollback"
+      ? savedRepeatMode
+      : "scrollback";
+  });
   const [beatCount, setBeatCount] = useState<number>(0);
   const [beatMeasure, setBeatMeasure] = useState<number>(0);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
@@ -188,6 +202,21 @@ function PracticePageContent() {
   useEffect(() => {
     localStorage.setItem("notestream_practice_expanded_folders", JSON.stringify(expandedFolderIds));
   }, [expandedFolderIds]);
+
+  useEffect(() => {
+    localStorage.setItem(PRACTICE_REPEAT_MODE_STORAGE_KEY, repeatMode);
+  }, [repeatMode]);
+
+  useEffect(() => {
+    if (!isPracticeSettingsOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsPracticeSettingsOpen(false);
+    };
+
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isPracticeSettingsOpen]);
 
   // Load Folder and Score Data (reusing logic from upload page)
   const fetchFoldersAndScores = useCallback(async () => {
@@ -331,31 +360,94 @@ function PracticePageContent() {
     }
   }, [activeScoreData]);
 
+  const resolvedPlaybackSequence = useMemo(
+    () => parsedSong ? resolvePlaybackSequence(parsedSong) : undefined,
+    [parsedSong]
+  );
+
+  const displaySong = useMemo(
+    () => parsedSong && repeatMode === "inline" && resolvedPlaybackSequence
+      ? buildInlinePlaybackDocument(parsedSong, resolvedPlaybackSequence)
+      : parsedSong,
+    [parsedSong, repeatMode, resolvedPlaybackSequence]
+  );
+
   // Select renderer based on sheetType
   const renderer = useMemo(() => {
-    if (!parsedSong) return null;
-    const resolved = selectPracticeRenderer(parsedSong);
-    console.log("Resolved renderer support. type:", parsedSong.metadata?.sheetType, "Renderer instance assigned.");
+    if (!displaySong) return null;
+    const resolved = selectPracticeRenderer(displaySong);
+    console.log("Resolved renderer support. type:", displaySong.metadata?.sheetType, "Renderer instance assigned.");
     return resolved;
-  }, [parsedSong]);
+  }, [displaySong]);
 
   // Build timeline segments and position them
   const positionedSegments = useMemo<PositionedSegment[]>(() => {
-    if (!parsedSong || !renderer) {
-       console.log("positionedSegments skipped. parsedSong:", !!parsedSong, "renderer:", !!renderer);
+    if (!displaySong || !renderer) {
+       console.log("positionedSegments skipped. displaySong:", !!displaySong, "renderer:", !!renderer);
        return [];
     }
-    const segments = renderer.buildTimeline(parsedSong);
+    const segments = renderer.buildTimeline(displaySong);
     console.log("Renderer built timeline, segments count:", segments.length);
     return positionSegments(segments, 0); // No gap between measure-sized segments to appear continuous
-  }, [parsedSong, renderer]);
+  }, [displaySong, renderer]);
+
+  const playbackSequence = useMemo(
+    () => repeatMode === "scrollback"
+      ? resolvedPlaybackSequence
+      : undefined,
+    [repeatMode, resolvedPlaybackSequence]
+  );
 
   const playbackModel = useMemo(
-    () => parsedSong
-      ? buildNotationPlaybackModel(parsedSong)
+    () => displaySong
+      ? buildNotationPlaybackModel(
+          displaySong,
+          repeatMode === "scrollback" ? playbackSequence : undefined
+        )
       : { measures: [], notes: [], tones: [], beats: [], totalTicks: 0 },
-    [parsedSong]
+    [displaySong, playbackSequence, repeatMode]
   );
+
+  const playbackTickToPrintedX = useCallback((tick: number) => {
+    const position = playbackPositionAtTick(playbackModel, tick);
+    if (!position) return 0;
+    const segment = positionedSegments[position.measure.sourceMeasureIndex];
+    if (!segment) return 0;
+    const progress = position.measure.durationTicks > 0
+      ? position.offsetTicks / position.measure.durationTicks
+      : 0;
+    return segment.x + segment.width * progress;
+  }, [playbackModel, positionedSegments]);
+
+  const printedXToPlaybackTick = useCallback((x: number) => {
+    const sourceIndex = positionedSegments.findIndex(segment =>
+      x >= segment.x && x < segment.x + segment.width
+    );
+    const boundedSourceIndex = sourceIndex >= 0
+      ? sourceIndex
+      : x < (positionedSegments[0]?.x ?? 0)
+        ? 0
+        : Math.max(0, positionedSegments.length - 1);
+    const segment = positionedSegments[boundedSourceIndex];
+    if (!segment) return 0;
+    const progress = Math.max(0, Math.min(1, (x - segment.x) / segment.width));
+    const candidates = playbackModel.measures.filter(
+      measure => measure.sourceMeasureIndex === boundedSourceIndex
+    );
+    const occurrence = candidates.reduce<(typeof candidates)[number] | undefined>(
+      (closest, candidate) => {
+        if (!closest) return candidate;
+        return Math.abs(candidate.startTick - currentTickRef.current) <
+          Math.abs(closest.startTick - currentTickRef.current)
+          ? candidate
+          : closest;
+      },
+      undefined
+    );
+    return occurrence
+      ? occurrence.startTick + occurrence.durationTicks * progress
+      : 0;
+  }, [playbackModel.measures, positionedSegments]);
 
   const clearHighlights = useCallback(() => {
     highlightedIdsRef.current.forEach(id => {
@@ -363,6 +455,24 @@ function PracticePageContent() {
     });
     highlightedIdsRef.current = new Set();
   }, []);
+
+  const changeRepeatMode = useCallback((mode: PracticeRepeatMode) => {
+    setIsPlaying(false);
+    setIsFlashing(false);
+    currentTickRef.current = 0;
+    setCurrentTick(0);
+    displayXRef.current = 0;
+    setOffsetX(0);
+    setBeatCount(0);
+    setBeatMeasure(0);
+    includeStartingBeatRef.current = false;
+    playbackHasStartedRef.current = false;
+    pianoOutputRef.current?.allNotesOff();
+    scheduledToneIdsRef.current.clear();
+    clearHighlights();
+    void audioContextRef.current?.suspend();
+    setRepeatMode(mode);
+  }, [clearHighlights]);
 
   const applyHighlights = useCallback((tick: number) => {
     const nextIds = activeNoteIdsAtTick(playbackModel.notes, tick);
@@ -535,13 +645,20 @@ function PracticePageContent() {
 
     // Sync tick and displayX with manual drag
     const scrollX = playheadX - newOffset;
-    const draggedTick = xToTick(scrollX, positionedSegments);
+    const draggedTick = playbackSequence
+      ? printedXToPlaybackTick(scrollX)
+      : xToTick(scrollX, positionedSegments);
     currentTickRef.current = draggedTick;
     setCurrentTick(draggedTick);
     displayXRef.current = scrollX;
 
-    const newBeatCount = Math.floor(draggedTick / 480) + 1;
-    setBeatCount(newBeatCount);
+    const draggedPosition = playbackPositionAtTick(playbackModel, draggedTick);
+    if (draggedPosition) {
+      setBeatMeasure(draggedPosition.measure.number);
+      setBeatCount(
+        Math.floor(draggedPosition.offsetTicks / draggedPosition.measure.beatTicks) + 1
+      );
+    }
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
@@ -686,8 +803,25 @@ function PracticePageContent() {
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
       const playheadX = viewportWidth * 0.4;
       
-      const targetX = tickToX(nextT, positionedSegments);
-      displayXRef.current += (targetX - displayXRef.current) * 0.18;
+      const targetX = playbackSequence
+        ? playbackTickToPrintedX(nextT)
+        : tickToX(nextT, positionedSegments);
+      const currentSourceIndex = playbackPositionAtTick(
+        playbackModel,
+        currentT
+      )?.measure.sourceMeasureIndex;
+      const nextSourceIndex = playbackPositionAtTick(
+        playbackModel,
+        nextT
+      )?.measure.sourceMeasureIndex;
+      const isTraversalJump =
+        currentSourceIndex !== undefined &&
+        nextSourceIndex !== undefined &&
+        nextSourceIndex !== currentSourceIndex &&
+        nextSourceIndex !== currentSourceIndex + 1;
+      displayXRef.current = isTraversalJump
+        ? targetX
+        : displayXRef.current + (targetX - displayXRef.current) * 0.18;
       
       const computedOffset = playheadX - displayXRef.current;
       
@@ -730,12 +864,14 @@ function PracticePageContent() {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isPlaying, playbackMode, playbackModel, playClick, positionedSegments, totalTicks]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
     if (!isPlaying && !isDragging) {
-      const targetX = tickToX(currentTick, positionedSegments);
+      const targetX = playbackSequence
+        ? playbackTickToPrintedX(currentTick)
+        : tickToX(currentTick, positionedSegments);
       displayXRef.current = targetX;
       
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
@@ -754,7 +890,7 @@ function PracticePageContent() {
 
       setOffsetX(adjusted);
     }
-  }, [currentTick, positionedSegments, isPlaying, isDragging]);
+  }, [currentTick, positionedSegments, isPlaying, isDragging, playbackSequence, playbackTickToPrintedX]);
 
   // Generate dynamic string label based on tuning configuration
   const getStringLabels = () => {
@@ -995,7 +1131,7 @@ function PracticePageContent() {
           >
             {activeScore && flattenedMeasures.length > 0 ? (
               <>
-                {renderer?.renderContinuous && parsedSong ? (
+                {renderer?.renderContinuous && displaySong ? (
                   <div
                     onPointerDown={handlePointerDown}
                     onPointerMove={handlePointerMove}
@@ -1011,7 +1147,7 @@ function PracticePageContent() {
                       }}
                       className="h-full w-max shrink-0 relative"
                     >
-                      {renderer.renderContinuous(parsedSong, positionedSegments, {
+                      {renderer.renderContinuous(displaySong, positionedSegments, {
                         isPlaying,
                         beatCount,
                         currentTick,
@@ -1102,15 +1238,29 @@ function PracticePageContent() {
               Practice controls
             </span>
 
-            {/* Metronome Beat Flash Indicator */}
-            {isPlaying && (
-              <div className="flex items-center gap-1.5">
-                <span className={`w-2.5 h-2.5 rounded-full ${isFlashing ? "bg-indigo-500 scale-125 shadow-[0_0_12px_rgba(99,102,241,0.8)]" : "bg-neutral-800"} transition-all duration-75`} />
-                <span className="text-[9.5px] font-mono font-extrabold text-neutral-500">
-                  {beatMeasure}:{beatCount}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center gap-2">
+              {/* Metronome Beat Flash Indicator */}
+              {isPlaying && (
+                <div className="flex items-center gap-1.5">
+                  <span className={`w-2.5 h-2.5 rounded-full ${isFlashing ? "bg-indigo-500 scale-125 shadow-[0_0_12px_rgba(99,102,241,0.8)]" : "bg-neutral-800"} transition-all duration-75`} />
+                  <span className="text-[9.5px] font-mono font-extrabold text-neutral-500">
+                    {beatMeasure}:{beatCount}
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsPracticeSettingsOpen(true)}
+                className="rounded-md p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                aria-label="Open practice settings"
+                title="Practice settings"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.592c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.245c.275.476.17 1.079-.252 1.43l-1.003.827c-.293.241-.438.613-.43.992a6.759 6.759 0 010 .255c-.008.378.137.75.43.992l1.003.827c.424.35.527.954.252 1.43l-1.296 2.245a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.57 6.57 0 01-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.592c-.55 0-1.02-.397-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.245a1.125 1.125 0 01.252-1.43l1.003-.827c.293-.242.438-.614.43-.992a6.822 6.822 0 010-.255c.008-.379-.137-.75-.43-.992l-1.003-.827a1.125 1.125 0 01-.252-1.43l1.296-2.245a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.086.22-.128.331-.183.581-.495.644-.869l.213-1.281z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-950/70 p-1 border border-neutral-800">
@@ -1388,6 +1538,81 @@ function PracticePageContent() {
         )}
 
       </div>
+
+      {isPracticeSettingsOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setIsPracticeSettingsOpen(false);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="practice-settings-title"
+            className="w-full max-w-md rounded-2xl border border-neutral-700 bg-neutral-900 p-5 shadow-2xl shadow-black/60"
+          >
+            <div className="mb-5 flex items-start justify-between gap-4">
+              <div>
+                <h2 id="practice-settings-title" className="text-sm font-black uppercase tracking-wider text-neutral-100">
+                  Practice settings
+                </h2>
+                <p className="mt-1 text-xs leading-relaxed text-neutral-500">
+                  Choose how practice playback presents repeated passages.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPracticeSettingsOpen(false)}
+                className="rounded-lg p-1.5 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                aria-label="Close practice settings"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <fieldset>
+              <legend className="mb-2 text-[10px] font-bold uppercase tracking-widest text-indigo-400">
+                Repeat presentation
+              </legend>
+              <div className="grid gap-2">
+                {([
+                  ["inline", "Inline Repeat", "Show repeated passages and each applicable ending in playback order; repeat signs appear ghosted."],
+                  ["scrollback", "Scrollback Repeat", "Keep the printed layout and full-strength repeat signs, then quickly return to the repeat start."],
+                ] as const).map(([value, label, description]) => (
+                  <label
+                    key={value}
+                    className={`flex cursor-pointer gap-3 rounded-xl border p-3 transition-colors ${
+                      repeatMode === value
+                        ? "border-indigo-500/70 bg-indigo-950/35"
+                        : "border-neutral-800 bg-neutral-950/40 hover:border-neutral-700"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="practice-repeat-mode"
+                      value={value}
+                      checked={repeatMode === value}
+                      onChange={() => changeRepeatMode(value)}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-indigo-500"
+                    />
+                    <span>
+                      <span className="block text-xs font-extrabold text-neutral-200">{label}</span>
+                      <span className="mt-1 block text-[11px] leading-relaxed text-neutral-500">{description}</span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <p className="mt-4 rounded-lg border border-indigo-500/15 bg-indigo-950/20 px-3 py-2 text-[10px] leading-relaxed text-indigo-200/65">
+              Both modes follow the same resolved repeat sequence; only their presentation differs.
+            </p>
+          </section>
+        </div>
+      )}
 
     </main>
   );

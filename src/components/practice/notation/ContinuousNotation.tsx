@@ -2,6 +2,7 @@ import React from 'react';
 import type { EasyScoreDocument } from '../../../types/easyScore';
 import type { PositionedSegment } from '../../../utils/practiceTimeline';
 import { NOTATION_LAYOUT } from './layout';
+import { writtenMeasureNotation } from './notationMetadata';
 import {
   eventDurationQuarter,
   eventStartQuarter,
@@ -22,6 +23,11 @@ import {
   pitchToVexKey,
   splitQuarterNotesIntoVexDurations,
 } from './vexflowHelpers';
+
+function ghostNotationColor(color: string): string {
+  const match = color.match(/^#([0-9a-f]{6})$/i);
+  return match ? `#${match[1]}59` : 'rgba(229, 229, 229, 0.35)';
+}
 
 export function ContinuousNotation({
   document,
@@ -55,10 +61,13 @@ export function ContinuousNotation({
         Dot,
         Beam,
         StaveConnector,
+        BarlineType,
+        VoltaType,
       } = VF;
 
       const measures = getNotationMeasures(document);
       if (measures.length === 0) return;
+      const writtenNotation = writtenMeasureNotation(measures);
 
       const staffNumbers = getStaffNumbers(measures);
 
@@ -109,6 +118,7 @@ export function ContinuousNotation({
           ? getOpeningPickupOffsetQuarterNotes(measure, beats, beatValue)
           : 0;
         const keySignature = keySignatureFromFifths(attributes.key?.fifths ?? 0);
+        const measureNotation = writtenNotation[measureIndex];
 
         // Build all staves for the measure before formatting any voices. This
         // lets both hands share the exact same horizontal rhythmic grid.
@@ -123,6 +133,49 @@ export function ContinuousNotation({
             stave.addClef(getClefName(clef?.sign));
             stave.addKeySignature(keySignature);
             stave.addTimeSignature(`${beats}/${beatValue}`);
+          }
+
+          const barlineTypes = {
+            single: BarlineType.SINGLE,
+            double: BarlineType.DOUBLE,
+            final: BarlineType.END,
+            'repeat-begin': BarlineType.REPEAT_BEGIN,
+            'repeat-end': BarlineType.REPEAT_END,
+          } as const;
+          if (measureNotation.beginBarline) {
+            stave.setBegBarType(barlineTypes[measureNotation.beginBarline]);
+          }
+          if (measureNotation.endBarline) {
+            stave.setEndBarType(barlineTypes[measureNotation.endBarline]);
+          }
+          if (staffIndex === 0 && measureNotation.volta) {
+            const voltaTypes = {
+              begin: VoltaType.BEGIN,
+              mid: VoltaType.MID,
+              end: VoltaType.END,
+              'begin-end': VoltaType.BEGIN_END,
+            } as const;
+            stave.setVoltaType(
+              voltaTypes[measureNotation.volta.kind],
+              measureNotation.volta.label,
+              -5
+            );
+          }
+          if (measure.playbackPresentation?.ghostRepeatSigns) {
+            const ghostStyle = {
+              fillStyle: ghostNotationColor(theme.foreground),
+              strokeStyle: ghostNotationColor(theme.foreground),
+            };
+            stave.getModifiers(undefined, 'Barline').forEach(modifier => {
+              const type = (modifier as unknown as { getType?: () => number }).getType?.();
+              if (
+                type === BarlineType.REPEAT_BEGIN ||
+                type === BarlineType.REPEAT_END ||
+                type === BarlineType.REPEAT_BOTH
+              ) {
+                modifier.setStyle(ghostStyle);
+              }
+            });
           }
 
           // Keep all music geometry color-coherent. These CSS variables are
@@ -158,14 +211,36 @@ export function ContinuousNotation({
               type: Record<string, number>;
             };
             const connectorTypes = Connector.type;
-            const drawConnector = (type: number) => {
+            const drawConnector = (type: number, ghosted = false) => {
               const connector = new Connector(topStave, bottomStave).setType(type).setContext(context);
-              connector.setStyle?.(elementStyle);
+              connector.setStyle?.(ghosted
+                ? {
+                    fillStyle: ghostNotationColor(theme.foreground),
+                    strokeStyle: ghostNotationColor(theme.foreground),
+                  }
+                : elementStyle);
               connector.draw();
             };
-            drawConnector(connectorTypes.SINGLE_RIGHT);
-            if (measureIndex === 0) {
+            const rightConnector = measureNotation.endBarline === 'final' ||
+              measureNotation.endBarline === 'repeat-end'
+              ? connectorTypes.BOLD_DOUBLE_RIGHT
+              : measureNotation.endBarline === 'double'
+                ? connectorTypes.THIN_DOUBLE
+                : connectorTypes.SINGLE_RIGHT;
+            drawConnector(
+              rightConnector,
+              !!measure.playbackPresentation?.ghostRepeatSigns &&
+                measureNotation.endBarline === 'repeat-end'
+            );
+            if (measureNotation.beginBarline === 'repeat-begin') {
+              drawConnector(
+                connectorTypes.BOLD_DOUBLE_LEFT,
+                !!measure.playbackPresentation?.ghostRepeatSigns
+              );
+            } else if (measureIndex === 0) {
               drawConnector(connectorTypes.SINGLE_LEFT);
+            }
+            if (measureIndex === 0) {
               drawConnector(connectorTypes.BRACE);
             }
           }
