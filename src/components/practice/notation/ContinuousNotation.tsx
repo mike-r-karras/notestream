@@ -5,6 +5,7 @@ import { NOTATION_LAYOUT } from './layout';
 import {
   eventDurationQuarter,
   eventStartQuarter,
+  getOpeningPickupOffsetQuarterNotes,
   getStaffNumbers,
   normalizeVoicesForStaff,
   readBeatType,
@@ -99,8 +100,14 @@ export function ContinuousNotation({
 
         const attributes = measure.attributes ?? {};
         const time = attributes.time;
-        const beats = time?.beats ?? 4;
-        const beatValue = readBeatType(time ?? null);
+        const metadataTime = document.metadata?.timeSignature;
+        const beats = time?.beats ?? metadataTime?.[0] ?? 4;
+        const beatValue = time
+          ? readBeatType(time)
+          : metadataTime?.[1] ?? 4;
+        const pickupOffsetQuarter = measureIndex === 0
+          ? getOpeningPickupOffsetQuarterNotes(measure, beats, beatValue)
+          : 0;
         const keySignature = keySignatureFromFifths(attributes.key?.fifths ?? 0);
 
         // Build all staves for the measure before formatting any voices. This
@@ -214,7 +221,11 @@ export function ContinuousNotation({
             };
 
             sourceEvents.forEach(event => {
-              const startQuarter = event.startQuarterNotes ?? event.start_quarter_notes ?? cursorQuarter;
+              const sourceStartQuarter =
+                event.startQuarterNotes ??
+                event.start_quarter_notes ??
+                cursorQuarter - pickupOffsetQuarter;
+              const startQuarter = sourceStartQuarter + pickupOffsetQuarter;
               const eventQuarter = eventDurationQuarter(event);
 
               // VexFlow Voice is sequential. Preserve the converter's absolute

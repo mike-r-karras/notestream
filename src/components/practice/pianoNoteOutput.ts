@@ -11,7 +11,10 @@ type ActiveVoice = {
 export class PianoNoteOutput implements NoteOutput {
   private readonly voices = new Set<ActiveVoice>();
 
-  constructor(private readonly context: AudioContext) {}
+  constructor(
+    private readonly context: AudioContext,
+    private readonly output: AudioNode = context.destination
+  ) {}
 
   playNote(midiNote: number, startTime: number, durationSeconds: number): void {
     const start = Math.max(this.context.currentTime, startTime);
@@ -37,7 +40,7 @@ export class PianoNoteOutput implements NoteOutput {
     fundamental.connect(gain);
     harmonic.connect(harmonicGain);
     harmonicGain.connect(gain);
-    gain.connect(this.context.destination);
+    gain.connect(this.output);
 
     gain.gain.setValueAtTime(0.0001, start);
     gain.gain.exponentialRampToValueAtTime(0.22, start + 0.008);

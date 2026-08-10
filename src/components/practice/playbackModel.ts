@@ -3,6 +3,8 @@ import {
   eventDurationQuarter,
   eventIsSounding,
   eventStartQuarter,
+  getMeasureEventEndQuarterNotes,
+  getOpeningPickupOffsetQuarterNotes,
   readBeatType,
 } from './notation/scoreModel';
 import {
@@ -84,15 +86,7 @@ function playbackMeasureQuarterNotes(
   beatType: number
 ): number {
   const declared = beats * (4 / beatType);
-  let eventEnd = 0;
-  for (const voice of measure.voices ?? []) {
-    for (const event of voice.events ?? []) {
-      eventEnd = Math.max(
-        eventEnd,
-        eventStartQuarter(event) + eventDurationQuarter(event)
-      );
-    }
-  }
+  const eventEnd = getMeasureEventEndQuarterNotes(measure);
   const duration = Math.max(declared, eventEnd);
   return duration > 0 ? duration : 1;
 }
@@ -130,6 +124,13 @@ export function buildNotationPlaybackModel(
     );
     const beatTicks = TICKS_PER_QUARTER * (4 / inheritedBeatType);
     const measureNumber = measure.number ?? measureIndex + 1;
+    const pickupOffsetQuarterNotes = measureIndex === 0
+      ? getOpeningPickupOffsetQuarterNotes(
+          measure,
+          inheritedBeats,
+          inheritedBeatType
+        )
+      : 0;
 
     measures.push({
       number: measureNumber,
@@ -161,7 +162,10 @@ export function buildNotationPlaybackModel(
           event
         );
         const eventStartTick =
-          startTick + Math.round(eventStartQuarter(event) * TICKS_PER_QUARTER);
+          startTick + Math.round(
+            (eventStartQuarter(event) + pickupOffsetQuarterNotes) *
+              TICKS_PER_QUARTER
+          );
         const eventDurationTicks = Math.max(
           1,
           Math.round(eventDurationQuarter(event) * TICKS_PER_QUARTER)

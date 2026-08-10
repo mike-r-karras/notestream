@@ -131,6 +131,8 @@ function PracticePageContent() {
   // Auto-scroll / Metronome States
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [bpm, setBpm] = useState<number>(100);
+  const [volume, setVolume] = useState<number>(100);
+  const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
   const [beatCount, setBeatCount] = useState<number>(0);
   const [beatMeasure, setBeatMeasure] = useState<number>(0);
@@ -149,6 +151,8 @@ function PracticePageContent() {
   const playbackHasStartedRef = useRef<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
+  const masterGainRef = useRef<GainNode | null>(null);
+  const volumeRef = useRef<number>(100);
   const pianoOutputRef = useRef<PianoNoteOutput | null>(null);
   const scheduledToneIdsRef = useRef<Set<string>>(new Set());
 
@@ -550,6 +554,12 @@ function PracticePageContent() {
     if (!audioContextRef.current) {
       audioContextRef.current = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
     }
+    if (!masterGainRef.current) {
+      const masterGain = audioContextRef.current.createGain();
+      masterGain.gain.value = volumeRef.current / 100;
+      masterGain.connect(audioContextRef.current.destination);
+      masterGainRef.current = masterGain;
+    }
     return audioContextRef.current;
   }, []);
 
@@ -564,7 +574,7 @@ function PracticePageContent() {
       const gain = ctx.createGain();
 
       osc.connect(gain);
-      gain.connect(ctx.destination);
+      gain.connect(masterGainRef.current ?? ctx.destination);
 
       if (isFirstBeat) {
         osc.frequency.setValueAtTime(1000, ctx.currentTime);
@@ -638,7 +648,10 @@ function PracticePageContent() {
       if (playbackMode === "tonal") {
         const ctx = getAudioContext();
         if (!pianoOutputRef.current) {
-          pianoOutputRef.current = new PianoNoteOutput(ctx);
+          pianoOutputRef.current = new PianoNoteOutput(
+            ctx,
+            masterGainRef.current ?? ctx.destination
+          );
         }
         playbackModel.tones.forEach(tone => {
           if (scheduledToneIdsRef.current.has(tone.id)) return;
@@ -1083,7 +1096,7 @@ function PracticePageContent() {
       <div className="h-[200px] border-t border-neutral-800 bg-neutral-900/80 backdrop-blur-md px-6 py-4 flex flex-col md:flex-row gap-6 shrink-0 shadow-[0_-4px_15px_rgba(0,0,0,0.5)] z-20">
         
         {/* Practice Playback Control Console */}
-        <div className="md:w-1/3 flex flex-col justify-between shrink-0 border-r border-neutral-850 md:pr-6 gap-2">
+        <div className="md:w-1/3 flex flex-col justify-between shrink-0 gap-2 border-r border-neutral-850 md:pr-6">
           <div className="flex items-center justify-between">
             <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
               Practice controls
@@ -1209,39 +1222,147 @@ function PracticePageContent() {
             </button>
           </div>
 
-          {/* Speed BPM Slider */}
-          <div className="flex flex-col gap-1.5 pb-1">
-            <div className="flex items-center justify-between text-[11px] font-semibold text-neutral-400">
-              <span>Practice Tempo:</span>
-              <span className="font-mono text-xs font-black text-indigo-400 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-500/10">
-                {bpm} BPM
-              </span>
-            </div>
-            <input
-              type="range"
-              min="50"
-              max="200"
-              value={bpm}
-              disabled={flattenedMeasures.length === 0}
-              onChange={(e) => {
-                pianoOutputRef.current?.allNotesOff();
-                scheduledToneIdsRef.current.clear();
-                includeStartingBeatRef.current = isPlaying;
-                setBpm(parseInt(e.target.value, 10));
-              }}
-              className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none disabled:opacity-50"
-            />
+          {/* Tempo and Volume Sliders */}
+          <div className="grid grid-cols-2 gap-4 pb-1">
+            <label className="flex flex-col gap-1.5 min-w-0">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-neutral-400">
+                <span>Tempo:</span>
+                <span className="font-mono text-xs font-black text-indigo-400 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-500/10">
+                  {bpm} BPM
+                </span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="200"
+                value={bpm}
+                disabled={flattenedMeasures.length === 0}
+                onChange={(e) => {
+                  pianoOutputRef.current?.allNotesOff();
+                  scheduledToneIdsRef.current.clear();
+                  includeStartingBeatRef.current = isPlaying;
+                  setBpm(parseInt(e.target.value, 10));
+                }}
+                className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none disabled:opacity-50"
+              />
+            </label>
+
+            <label className="flex flex-col gap-1.5 min-w-0">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-neutral-400">
+                <span>Volume:</span>
+                <span className="font-mono text-xs font-black text-indigo-400 bg-indigo-950/40 px-2 py-0.5 rounded border border-indigo-500/10">
+                  {volume}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volume}
+                disabled={flattenedMeasures.length === 0}
+                aria-label="Playback volume"
+                onChange={(e) => {
+                  const nextVolume = parseInt(e.target.value, 10);
+                  volumeRef.current = nextVolume;
+                  setVolume(nextVolume);
+                  const masterGain = masterGainRef.current;
+                  if (masterGain) {
+                    masterGain.gain.setTargetAtTime(
+                      nextVolume / 100,
+                      masterGain.context.currentTime,
+                      0.01
+                    );
+                  }
+                }}
+                className="w-full h-1 bg-neutral-800 rounded-lg appearance-none cursor-pointer accent-indigo-500 focus:outline-none disabled:opacity-50"
+              />
+            </label>
           </div>
         </div>
 
-        {/* Dynamic Vexchords Chords Reference Dictionary Pane */}
-        <div className="flex-1 flex flex-col min-w-0">
-          <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400 mb-2 block">
-            Chord dictionary ({uniqueChords.length} unique chords)
-          </span>
+        {/* Practice Feedback Mock-up */}
+        <div className={`relative flex-1 min-w-0 min-h-0 ${
+          uniqueChords.length > 0 ? "border-r border-neutral-850 md:pr-6" : ""
+        }`}>
+          <button
+            type="button"
+            onClick={() => setIsFeedbackVisible(visible => !visible)}
+            aria-label={isFeedbackVisible ? "Hide practice feedback" : "Show practice feedback"}
+            aria-pressed={!isFeedbackVisible}
+            title={isFeedbackVisible ? "Hide practice feedback" : "Show practice feedback"}
+            className="absolute right-6 top-0 z-10 rounded-md p-1 text-neutral-500 transition-colors hover:bg-neutral-800 hover:text-indigo-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            {isFeedbackVisible ? (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.451 10.451 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+              </svg>
+            ) : (
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-4 w-4" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            )}
+          </button>
 
-          <div className="flex-1 bg-neutral-950/30 border border-neutral-850/60 rounded-xl px-4 py-2 flex items-center overflow-x-auto min-w-0 select-none">
-            {uniqueChords.length > 0 ? (
+          <div className={`flex h-full flex-col transition-opacity duration-200 ${
+            isFeedbackVisible ? "opacity-100" : "pointer-events-none opacity-0"
+          }`} aria-hidden={!isFeedbackVisible}>
+            <div className="flex items-center justify-between mb-2 pr-7">
+              <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
+                Practice feedback
+              </span>
+              <span className="text-[8px] uppercase font-bold tracking-wider text-neutral-600">
+                Preview
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 mb-2">
+              {[
+                ["Tonality", "92%"],
+                ["Timing precision", "88%"],
+                ["Accuracy", "90%"],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="min-w-0 rounded-lg border border-neutral-800 bg-neutral-950/50 px-2 py-1.5"
+                >
+                  <div className="truncate text-[8px] font-bold uppercase tracking-wide text-neutral-500">
+                    {label}
+                  </div>
+                  <div className="font-mono text-sm font-black text-indigo-400">
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-neutral-800 bg-neutral-950/30 px-2 py-1.5">
+              <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-neutral-600">
+                Recommendations
+              </div>
+              <ul className="space-y-1.5">
+                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
+                  Repeat the ascending passage in measures 9–10 at a lower tempo, increasing it as accuracy develops.
+                </li>
+                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
+                  Practice moving from C♯ minor to G major and back until the transition feels even.
+                </li>
+                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
+                  Isolate the off-beat entrances in measures 13–14 and practice them with the metronome.
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {uniqueChords.length > 0 && (
+          /* Dynamic Vexchords Chords Reference Dictionary Pane */
+          <div className="flex-1 flex flex-col min-w-0">
+            <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400 mb-2 block">
+              Chord dictionary ({uniqueChords.length} unique chords)
+            </span>
+
+            <div className="flex-1 bg-neutral-950/30 border border-neutral-850/60 rounded-xl px-4 py-2 flex items-center overflow-x-auto min-w-0 select-none">
               <div className="flex items-center gap-4 py-1">
                 {uniqueChords.map((chord) => (
                   <div
@@ -1262,13 +1383,9 @@ function PracticePageContent() {
                   </div>
                 ))}
               </div>
-            ) : (
-              <div className="flex-1 text-center py-4 text-xs text-neutral-600 italic">
-                {activeScore ? "This song chart does not declare any explicit chords." : "No song active. Load a song to view its chord charts."}
-              </div>
-            )}
+            </div>
           </div>
-        </div>
+        )}
 
       </div>
 

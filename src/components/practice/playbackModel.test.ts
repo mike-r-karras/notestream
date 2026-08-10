@@ -7,6 +7,7 @@ import {
   elapsedMsToTick,
   tickToElapsedMs,
 } from './playbackModel';
+import { buildNotationTimeline } from './notation/timeline';
 
 type TestEvent = {
   id: string;
@@ -98,6 +99,63 @@ describe('buildNotationPlaybackModel', () => {
     expect(activeNoteIdsAtTick(model.notes, 720)).toEqual(new Set());
   });
 
+  it('right-aligns an underfilled opening measure as a pickup', () => {
+    const document = score([{
+      id: 'P1-m1',
+      number: 1,
+      attributes: { time: { beats: 3, beatType: 8 } },
+      voices: [{
+        staff: 1,
+        number: 1,
+        events: [
+          event('pickup-1', 0, 0.25),
+          event('pickup-2', 0.25, 0.25),
+        ],
+      }],
+    }]);
+    const model = buildNotationPlaybackModel(document);
+    const timeline = buildNotationTimeline(document);
+
+    expect(model.totalTicks).toBe(720);
+    expect(model.beats.map(beat => beat.tick)).toEqual([0, 240, 480]);
+    expect(model.notes.map(note => [note.id, note.startTick])).toEqual([
+      ['pickup-1', 480],
+      ['pickup-2', 600],
+    ]);
+    expect(model.tones.map(tone => tone.startTick)).toEqual([480, 600]);
+    expect(
+      timeline[0].events
+        .filter(event => event.kind === 'note')
+        .map(event => [event.id, event.startTick])
+    ).toEqual([
+      ['pickup-1', 480],
+      ['pickup-2', 600],
+    ]);
+  });
+
+  it('does not shift a complete opening measure containing a leading rest', () => {
+    const model = buildNotationPlaybackModel(score([{
+      id: 'P1-m1',
+      number: 1,
+      attributes: { time: { beats: 3, beatType: 8 } },
+      voices: [{
+        staff: 1,
+        number: 1,
+        events: [
+          event('leading-rest', 0, 1, 1, 1, 'rest'),
+          event('final-1', 1, 0.25),
+          event('final-2', 1.25, 0.25),
+        ],
+      }],
+    }]));
+
+    expect(model.totalTicks).toBe(720);
+    expect(model.notes.map(note => [note.id, note.startTick])).toEqual([
+      ['final-1', 480],
+      ['final-2', 600],
+    ]);
+  });
+
   it('does not force a short declared measure to one quarter note', () => {
     const model = buildNotationPlaybackModel(score([{
       number: 1,
@@ -129,7 +187,7 @@ describe('buildNotationPlaybackModel', () => {
           number: 5,
           events: [
             event('left-hand', 0.25, 1, 2, 5),
-            event('silent-rest', 1.25, 0.5, 2, 5, 'rest'),
+            event('silent-rest', 1.25, 2.75, 2, 5, 'rest'),
           ],
         },
       ],

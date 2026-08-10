@@ -16,6 +16,35 @@ export function eventIsSounding(event: StandardNotationEvent): boolean {
   return event.type !== 'rest' && !!event.pitches?.length && eventDurationQuarter(event) > 0;
 }
 
+export function getMeasureEventEndQuarterNotes(
+  measure: StandardNotationMeasure
+): number {
+  let eventEnd = 0;
+  for (const voice of measure.voices ?? []) {
+    for (const event of voice.events ?? []) {
+      eventEnd = Math.max(
+        eventEnd,
+        eventStartQuarter(event) + eventDurationQuarter(event)
+      );
+    }
+  }
+  return eventEnd;
+}
+
+export function getOpeningPickupOffsetQuarterNotes(
+  measure: StandardNotationMeasure,
+  beats: number,
+  beatType: number
+): number {
+  const declared = beats * (4 / beatType);
+  const eventEnd = getMeasureEventEndQuarterNotes(measure);
+  const epsilon = 1e-5;
+
+  return eventEnd > epsilon && eventEnd < declared - epsilon
+    ? declared - eventEnd
+    : 0;
+}
+
 export function voicesActuallyOverlap(
   a: StandardNotationVoice,
   b: StandardNotationVoice
@@ -107,15 +136,7 @@ export function getMeasureQuarterNotes(measure: StandardNotationMeasure): number
   const beatType = readBeatType(time ?? null);
   const declared = beats * (4 / beatType);
 
-  let eventEnd = 0;
-  for (const voice of measure.voices ?? []) {
-    for (const event of voice.events ?? []) {
-      eventEnd = Math.max(
-        eventEnd,
-        eventStartQuarter(event) + eventDurationQuarter(event)
-      );
-    }
-  }
+  const eventEnd = getMeasureEventEndQuarterNotes(measure);
 
   return Math.max(declared, eventEnd, 1);
 }
