@@ -20,6 +20,10 @@ import {
 import { resolvePlaybackSequence } from "../../components/practice/playbackResolver";
 import { PianoNoteOutput } from "../../components/practice/pianoNoteOutput";
 import { buildInlinePlaybackDocument } from "../../components/practice/inlinePlayback";
+import {
+  setRenderedNoteActive,
+  type RenderedNoteRegistry,
+} from "../../components/practice/notation/renderedNoteRegistry";
 
 export interface Folder {
   id: number;
@@ -152,7 +156,7 @@ function PracticePageContent() {
   const [beatMeasure, setBeatMeasure] = useState<number>(0);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [currentTick, setCurrentTick] = useState<number>(0);
-  const [renderedNotes, setRenderedNotes] = useState<Map<string, SVGElement>>(new Map());
+  const [renderedNotes, setRenderedNotes] = useState<RenderedNoteRegistry>(new Map());
 
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
@@ -160,7 +164,7 @@ function PracticePageContent() {
   const playbackStartTimeRef = useRef<number>(0);
   const playbackStartElapsedRef = useRef<number>(0);
   const includeStartingBeatRef = useRef<boolean>(false);
-  const renderedNotesRef = useRef<Map<string, SVGElement>>(new Map());
+  const renderedNotesRef = useRef<RenderedNoteRegistry>(new Map());
   const highlightedIdsRef = useRef<Set<string>>(new Set());
   const playbackHasStartedRef = useRef<boolean>(false);
 
@@ -451,7 +455,7 @@ function PracticePageContent() {
 
   const clearHighlights = useCallback(() => {
     highlightedIdsRef.current.forEach(id => {
-      renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+      setRenderedNoteActive(renderedNotesRef.current, id, false);
     });
     highlightedIdsRef.current = new Set();
   }, []);
@@ -478,18 +482,18 @@ function PracticePageContent() {
     const nextIds = activeNoteIdsAtTick(playbackModel.notes, tick);
     highlightedIdsRef.current.forEach(id => {
       if (!nextIds.has(id)) {
-        renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+        setRenderedNoteActive(renderedNotesRef.current, id, false);
       }
     });
     nextIds.forEach(id => {
       if (!highlightedIdsRef.current.has(id)) {
-        renderedNotesRef.current.get(id)?.classList.add("notestream-playback-active");
+        setRenderedNoteActive(renderedNotesRef.current, id, true);
       }
     });
     highlightedIdsRef.current = nextIds;
   }, [playbackModel.notes]);
 
-  const handleRenderedNotes = useCallback((notes: Map<string, SVGElement>) => {
+  const handleRenderedNotes = useCallback((notes: RenderedNoteRegistry) => {
     setRenderedNotes(notes);
   }, []);
 
@@ -1157,6 +1161,15 @@ function PracticePageContent() {
                         onRenderedNotes: handleRenderedNotes,
                       })}
                     </div>
+                    {renderer.renderStationaryOverlay?.(displaySong, positionedSegments, {
+                      isPlaying,
+                      beatCount,
+                      currentTick,
+                      offsetX,
+                      segments: positionedSegments,
+                      parsedInst,
+                      onRenderedNotes: handleRenderedNotes,
+                    })}
                   </div>
                 ) : (
                   <>

@@ -10,7 +10,7 @@ describe('buildInlinePlaybackDocument', () => {
   it('expands Fur Elise without repeating the pickup or mutating the source', () => {
     const source = JSON.parse(
       readFileSync(
-        new URL('../../../fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
+        new URL('../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
         'utf8'
       )
     ) as EasyScoreDocument;

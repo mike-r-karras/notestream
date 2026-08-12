@@ -4,7 +4,9 @@ import { detectSheetType } from '../../utils/detectSheetType';
 import { PositionedSegment, PracticeSegment, PracticeEvent } from '../../utils/practiceTimeline';
 
 import { ContinuousNotation } from './notation/ContinuousNotation';
+import { StationarySignature } from './notation/StationarySignature';
 import { buildNotationTimeline } from './notation/timeline';
+import type { RenderedNoteRegistry } from './notation/renderedNoteRegistry';
 
 export interface PracticeRenderContext {
   isPlaying: boolean;
@@ -13,7 +15,7 @@ export interface PracticeRenderContext {
   offsetX: number;
   segments: PositionedSegment[];
   parsedInst?: InstrumentConfig | null;
-  onRenderedNotes?: (notes: Map<string, SVGElement>) => void;
+  onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
 }
 
 export interface ChordLyricsSegmentPayload {
@@ -40,6 +42,12 @@ export interface PracticeRenderer {
   ): React.ReactNode;
 
   renderContinuous?(
+    document: EasyScoreDocument,
+    segments: PositionedSegment[],
+    context: PracticeRenderContext
+  ): React.ReactNode;
+
+  renderStationaryOverlay?(
     document: EasyScoreDocument,
     segments: PositionedSegment[],
     context: PracticeRenderContext
@@ -321,6 +329,16 @@ export const notationPracticeRenderer: PracticeRenderer & {
         document={document}
         segments={segments}
         onRenderedNotes={context.onRenderedNotes}
+      />
+    );
+  },
+
+  renderStationaryOverlay(document, segments, context): React.ReactNode {
+    return (
+      <StationarySignature
+        document={document}
+        segments={segments}
+        offsetX={context.offsetX}
       />
     );
   },

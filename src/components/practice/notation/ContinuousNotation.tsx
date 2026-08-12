@@ -6,12 +6,15 @@ import { writtenMeasureNotation } from './notationMetadata';
 import {
   eventDurationQuarter,
   eventStartQuarter,
-  getOpeningPickupOffsetQuarterNotes,
   getStaffNumbers,
   normalizeVoicesForStaff,
-  readBeatType,
 } from './scoreModel';
 import { getNotationMeasures, notationEventId } from './timeline';
+import { buildNotationSignatureTimeline } from './signatureTimeline';
+import {
+  registerRenderedNote,
+  type RenderedNoteRegistry,
+} from './renderedNoteRegistry';
 import { notationThemeStyle, readNotationTheme } from './theme';
 import {
   accidentalFromAlter,
@@ -36,7 +39,7 @@ export function ContinuousNotation({
 }: {
   document: EasyScoreDocument;
   segments: PositionedSegment[];
-  onRenderedNotes?: (notes: Map<string, SVGElement>) => void;
+  onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
 
@@ -48,6 +51,20 @@ export function ContinuousNotation({
 
     const draw = async () => {
       const VF = await import('vexflow');
+      if (cancelled || !hostRef.current) return;
+
+      // The bundled VexFlow entry registers its FontFace objects while the
+      // dynamic import resolves, but their browser loads can still be pending.
+      // A cold direct navigation can otherwise format with fallback metrics
+      // and draw with Bravura metrics, progressively separating noteheads,
+      // stems, flags, and beams. Client-side navigation hid the race because
+      // the fonts had finished loading by the time the score was selected.
+      if ('fonts' in globalThis.document) {
+        await Promise.all([
+          globalThis.document.fonts.load('30px Bravura'),
+          globalThis.document.fonts.load('30px Academico'),
+        ]);
+      }
       if (cancelled || !hostRef.current) return;
 
       const {
@@ -68,6 +85,7 @@ export function ContinuousNotation({
       const measures = getNotationMeasures(document);
       if (measures.length === 0) return;
       const writtenNotation = writtenMeasureNotation(measures);
+      const signatureTimeline = buildNotationSignatureTimeline(document);
 
       const staffNumbers = getStaffNumbers(measures);
 
@@ -108,16 +126,10 @@ export function ContinuousNotation({
         if (!segment) return;
 
         const attributes = measure.attributes ?? {};
-        const time = attributes.time;
-        const metadataTime = document.metadata?.timeSignature;
-        const beats = time?.beats ?? metadataTime?.[0] ?? 4;
-        const beatValue = time
-          ? readBeatType(time)
-          : metadataTime?.[1] ?? 4;
-        const pickupOffsetQuarter = measureIndex === 0
-          ? getOpeningPickupOffsetQuarterNotes(measure, beats, beatValue)
-          : 0;
-        const keySignature = keySignatureFromFifths(attributes.key?.fifths ?? 0);
+        const signature = signatureTimeline[measureIndex];
+        const beats = signature?.beats ?? 4;
+        const beatValue = signature?.beatType ?? 4;
+        const keySignature = keySignatureFromFifths(signature?.fifths ?? 0);
         const measureNotation = writtenNotation[measureIndex];
 
         // Build all staves for the measure before formatting any voices. This
@@ -125,13 +137,20 @@ export function ContinuousNotation({
         const staves = new Map<number, InstanceType<typeof Stave>>();
         staffNumbers.forEach((staffNumber, staffIndex) => {
           const staveY = top + staffIndex * staffGap;
-          const stave = new Stave(segment.x, staveY, segment.width);
-          const clef = attributes.clefs?.[String(staffNumber)]
-            ?? (staffNumber === 1 ? attributes.clef : undefined);
+          const stave = new Stave(
+            segment.x + (measureIndex === 0 ? 10 : 0),
+            staveY,
+            segment.width - (measureIndex === 0 ? 10 : 0)
+          );
+          const clefName = getClefName(signature?.clefs[staffNumber]);
 
-          if (measureIndex === 0) {
-            stave.addClef(getClefName(clef?.sign));
+          if (signature?.changed.clefStaffs.includes(staffNumber)) {
+            stave.addClef(clefName);
+          }
+          if (signature?.changed.key) {
             stave.addKeySignature(keySignature);
+          }
+          if (signature?.changed.time) {
             stave.addTimeSignature(`${beats}/${beatValue}`);
           }
 
@@ -274,9 +293,7 @@ export function ContinuousNotation({
               renderedVoices: voicesForStaff.length,
             });
           }
-          const clef = attributes.clefs?.[String(staffNumber)]
-            ?? (staffNumber === 1 ? attributes.clef : undefined);
-          const clefName = getClefName(clef?.sign);
+          const clefName = getClefName(signature?.clefs[staffNumber]);
 
           voicesForStaff.forEach((sourceVoice, voiceIndex) => {
             const sourceEvents = [...(sourceVoice.events ?? [])].sort((a, b) => {
@@ -299,8 +316,8 @@ export function ContinuousNotation({
               const sourceStartQuarter =
                 event.startQuarterNotes ??
                 event.start_quarter_notes ??
-                cursorQuarter - pickupOffsetQuarter;
-              const startQuarter = sourceStartQuarter + pickupOffsetQuarter;
+                cursorQuarter;
+              const startQuarter = sourceStartQuarter;
               const eventQuarter = eventDurationQuarter(event);
 
               // VexFlow Voice is sequential. Preserve the converter's absolute
@@ -470,7 +487,7 @@ export function ContinuousNotation({
       });
 
       const svg = liveHost.querySelector('svg');
-      const noteRegistry = new Map<string, SVGElement>();
+      const noteRegistry: RenderedNoteRegistry = new Map();
       renderedNoteElements.forEach(({ id, note }) => {
         const element = note.getSVGElement();
         if (!element) return;
@@ -480,7 +497,7 @@ export function ContinuousNotation({
         overlay.setAttribute('data-notestream-event-id', id);
         overlay.classList.add('notestream-playback-overlay');
         element.parentNode?.insertBefore(overlay, element.nextSibling);
-        noteRegistry.set(id, overlay);
+        registerRenderedNote(noteRegistry, id, overlay);
       });
       onRenderedNotes?.(noteRegistry);
       console.log('[Notestream VexFlow v5.2-spacing] grand-staff draw complete', {

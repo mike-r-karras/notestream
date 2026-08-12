@@ -111,7 +111,7 @@ describe('resolvePlaybackSequence', () => {
   it('matches the supplied Fur Elise pickup and ending sequence', () => {
     const fixture = JSON.parse(
       readFileSync(
-        new URL('../../../fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
+        new URL('../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
         'utf8'
       )
     ) as EasyScoreDocument;
@@ -144,16 +144,16 @@ describe('resolvePlaybackSequence', () => {
     const sequence = resolvePlaybackSequence(document);
     const model = buildNotationPlaybackModel(document, sequence);
     const repeatedMeasure = model.measures.filter(item => item.number === 1);
-    const repeatedNote = model.notes.filter(note => note.id === 'P1-m1-event');
+    const repeatedNote = model.notes.filter(note => note.id === 'P1-m1::P1-m1-event');
 
     expect(model.measures.map(item => item.number)).toEqual([0, 1, 2, 1, 2, 3]);
     expect(model.beats.filter(beat => beat.measure === 1 && beat.accent)).toHaveLength(2);
     expect(repeatedNote).toHaveLength(2);
     expect(activeNoteIdsAtTick(model.notes, repeatedMeasure[0].startTick)).toEqual(
-      new Set(['P1-m1-event'])
+      new Set(['P1-m1::P1-m1-event'])
     );
     expect(activeNoteIdsAtTick(model.notes, repeatedMeasure[1].startTick)).toEqual(
-      new Set(['P1-m1-event'])
+      new Set(['P1-m1::P1-m1-event'])
     );
   });
 });

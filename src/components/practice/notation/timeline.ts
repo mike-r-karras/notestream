@@ -24,7 +24,11 @@ export function notationEventId(
   voice: StandardNotationVoice,
   event: StandardNotationEvent
 ): string {
-  if (event.id) return event.id;
+  // Converter event IDs are stable but are not guaranteed to be globally
+  // unique; some scores restart them in each measure. Scope them to their
+  // canonical measure so the transport and SVG registry identify the same
+  // single written occurrence.
+  if (event.id) return `${measureId}::${event.id}`;
   const staff = event.staff ?? voice.staff ?? 1;
   const voiceNumber = event.voice ?? voice.number ?? 1;
   const start = eventStartQuarter(event).toFixed(6);

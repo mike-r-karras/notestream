@@ -89,12 +89,12 @@ describe('buildNotationPlaybackModel', () => {
     expect(model.totalTicks).toBe(720);
     expect(model.beats.map(beat => beat.tick)).toEqual([0, 240, 480]);
     expect(model.notes[1]).toMatchObject({
-      id: 'P1-m16-s1-v1-e2',
+      id: 'P1-m16::P1-m16-s1-v1-e2',
       startTick: 600,
       durationTicks: 120,
     });
     expect(activeNoteIdsAtTick(model.notes, 600)).toEqual(
-      new Set(['P1-m16-s1-v1-e2'])
+      new Set(['P1-m16::P1-m16-s1-v1-e2'])
     );
     expect(activeNoteIdsAtTick(model.notes, 720)).toEqual(new Set());
   });
@@ -119,8 +119,8 @@ describe('buildNotationPlaybackModel', () => {
     expect(model.totalTicks).toBe(720);
     expect(model.beats.map(beat => beat.tick)).toEqual([0, 240, 480]);
     expect(model.notes.map(note => [note.id, note.startTick])).toEqual([
-      ['pickup-1', 480],
-      ['pickup-2', 600],
+      ['P1-m1::pickup-1', 480],
+      ['P1-m1::pickup-2', 600],
     ]);
     expect(model.tones.map(tone => tone.startTick)).toEqual([480, 600]);
     expect(
@@ -128,8 +128,8 @@ describe('buildNotationPlaybackModel', () => {
         .filter(event => event.kind === 'note')
         .map(event => [event.id, event.startTick])
     ).toEqual([
-      ['pickup-1', 480],
-      ['pickup-2', 600],
+      ['P1-m1::pickup-1', 480],
+      ['P1-m1::pickup-2', 600],
     ]);
   });
 
@@ -151,8 +151,8 @@ describe('buildNotationPlaybackModel', () => {
 
     expect(model.totalTicks).toBe(720);
     expect(model.notes.map(note => [note.id, note.startTick])).toEqual([
-      ['final-1', 480],
-      ['final-2', 600],
+      ['P1-m1::final-1', 480],
+      ['P1-m1::final-2', 600],
     ]);
   });
 
@@ -194,9 +194,13 @@ describe('buildNotationPlaybackModel', () => {
     }]));
 
     expect(activeNoteIdsAtTick(model.notes, 120)).toEqual(
-      new Set(['right-chord', 'right-voice-2', 'left-hand'])
+      new Set([
+        'notation-measure-1::right-chord',
+        'notation-measure-1::right-voice-2',
+        'notation-measure-1::left-hand',
+      ])
     );
-    expect(model.notes.some(note => note.id === 'silent-rest')).toBe(false);
+    expect(model.notes.some(note => note.id.endsWith('silent-rest'))).toBe(false);
     expect(model.tones.map(tone => tone.midiNote)).toEqual([60, 64, 60, 60]);
   });
 
@@ -225,7 +229,7 @@ describe('buildNotationPlaybackModel', () => {
     ]));
 
     expect(model.tones).toEqual([{
-      id: 'tie-start-pitch-0',
+      id: 'notation-measure-1::tie-start-pitch-0',
       midiNote: 66,
       startTick: 0,
       durationTicks: 960,

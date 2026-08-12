@@ -1,11 +1,15 @@
 import type { StandardNotationMeasure } from './types';
-import { eventStartQuarter, getMeasureQuarterNotes } from './scoreModel';
+import {
+  eventStartQuarter,
+  getMeasureEventEndQuarterNotes,
+  getMeasureQuarterNotes,
+  getOpeningPickupOffsetQuarterNotes,
+  readBeatType,
+} from './scoreModel';
 
 export const NOTATION_LAYOUT = {
   pixelsPerQuarter: 108,
   minimumMeasureWidth: 150,
-  firstMeasureHeaderAllowance: 92,
-
   // Content-aware spacing. These are intentionally conservative: VexFlow
   // modifiers (especially accidentals) need real horizontal room before its
   // formatter can produce stable stems and beams.
@@ -64,20 +68,26 @@ function getContentMinimumWidth(measure: StandardNotationMeasure): number {
 
 export function getMeasureWidth(
   measure: StandardNotationMeasure,
-  measureIndex = 0
+  _measureIndex = 0
 ): number {
   const quarterNotes = getMeasureQuarterNotes(measure);
-  const headerAllowance =
-    measureIndex === 0 ? NOTATION_LAYOUT.firstMeasureHeaderAllowance : 0;
+  const time = measure.attributes?.time;
+  const isOpeningPickup = _measureIndex === 0 && !!time &&
+    getOpeningPickupOffsetQuarterNotes(
+      measure,
+      time.beats ?? 4,
+      readBeatType(time)
+    ) > 0;
+  const visualQuarterNotes = isOpeningPickup
+    ? getMeasureEventEndQuarterNotes(measure)
+    : quarterNotes;
 
   const timeDrivenWidth =
-    quarterNotes * NOTATION_LAYOUT.pixelsPerQuarter;
+    visualQuarterNotes * NOTATION_LAYOUT.pixelsPerQuarter;
   const contentDrivenWidth = getContentMinimumWidth(measure);
 
   return Math.max(
     NOTATION_LAYOUT.minimumMeasureWidth,
-    Math.round(
-      Math.max(timeDrivenWidth, contentDrivenWidth) + headerAllowance
-    )
+    Math.round(Math.max(timeDrivenWidth, contentDrivenWidth))
   );
 }
