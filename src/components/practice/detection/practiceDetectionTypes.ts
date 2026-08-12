@@ -42,6 +42,7 @@ export type PracticeDetectionResult = {
   unexpectedNotes: NoteDetectionResult[];
   timing: {
     expectedOnset: number;
+    toleranceMs: number;
     detectedOnset?: number;
     errorMs?: number;
   };

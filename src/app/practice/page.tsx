@@ -24,6 +24,11 @@ import {
   type PracticeAudioDebugSnapshot,
 } from "../../components/practice/audio/practiceAudioDetector";
 import { buildExpectedNoteEvents } from "../../components/practice/detection/scoreExpectedEvents";
+import {
+  mergePerformanceResults,
+  scorePracticePerformance,
+} from "../../components/practice/detection/practicePerformanceScorer";
+import type { PracticeDetectionResult } from "../../components/practice/detection/practiceDetectionTypes";
 import { buildInlinePlaybackDocument } from "../../components/practice/inlinePlayback";
 import {
   setRenderedNoteActive,
@@ -170,6 +175,7 @@ function PracticePageContent() {
   const [isDetectionEnabled, setIsDetectionEnabled] = useState(false);
   const [detectionSnapshot, setDetectionSnapshot] = useState<PracticeAudioDebugSnapshot | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
+  const [performanceResults, setPerformanceResults] = useState<Map<string, PracticeDetectionResult>>(new Map());
 
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
@@ -570,6 +576,7 @@ function PracticePageContent() {
         playbackHasStartedRef.current = false;
         pianoOutputRef.current?.allNotesOff();
         scheduledToneIdsRef.current.clear();
+        setPerformanceResults(new Map());
         clearHighlights();
       });
     }
@@ -736,6 +743,21 @@ function PracticePageContent() {
   const detectionBpmRef = useRef(bpm);
   const detectionExpectedEventsRef = useRef(expectedDetectionEvents);
   const hasExpectedDetectionEvents = expectedDetectionEvents.length > 0;
+  const performanceMetrics = useMemo(
+    () => scorePracticePerformance(performanceResults.values()),
+    [performanceResults]
+  );
+  const recentPerformanceResults = useMemo(
+    () => [...performanceResults.values()]
+      .filter(result => result.status !== "waiting")
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 4),
+    [performanceResults]
+  );
+  const handleDetectionSnapshot = useCallback((snapshot: PracticeAudioDebugSnapshot) => {
+    setDetectionSnapshot(snapshot);
+    setPerformanceResults(current => mergePerformanceResults(current, snapshot.results));
+  }, []);
 
   useEffect(() => {
     detectionPlaybackModelRef.current = playbackModel;
@@ -758,7 +780,7 @@ function PracticePageContent() {
         currentTickRef.current,
         detectionBpmRef.current
       ),
-      setDetectionSnapshot
+      handleDetectionSnapshot
     );
     audioDetectorRef.current = detector;
     void detector.start().catch(error => {
@@ -771,7 +793,7 @@ function PracticePageContent() {
       detector.stop();
       if (audioDetectorRef.current === detector) audioDetectorRef.current = null;
     };
-  }, [getAudioContext, hasExpectedDetectionEvents, isDetectionEnabled]);
+  }, [getAudioContext, handleDetectionSnapshot, hasExpectedDetectionEvents, isDetectionEnabled]);
 
   // Sync refs
   useEffect(() => {
@@ -1315,6 +1337,7 @@ function PracticePageContent() {
                 onClick={() => {
                   setDetectionSnapshot(null);
                   setDetectionError(null);
+                  if (!isDetectionEnabled) setPerformanceResults(new Map());
                   setIsDetectionEnabled(enabled => !enabled);
                 }}
                 disabled={expectedDetectionEvents.length === 0}
@@ -1447,6 +1470,7 @@ function PracticePageContent() {
                 playbackHasStartedRef.current = false;
                 pianoOutputRef.current?.allNotesOff();
                 scheduledToneIdsRef.current.clear();
+                setPerformanceResults(new Map());
                 clearHighlights();
                 if (!isDetectionEnabled) void audioContextRef.current?.suspend();
               }}
@@ -1550,15 +1574,21 @@ function PracticePageContent() {
                 Practice feedback
               </span>
               <span className="text-[8px] uppercase font-bold tracking-wider text-neutral-600">
-                Preview
+                {isDetectionEnabled ? "Live" : "Awaiting microphone"}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-2">
               {[
-                ["Tonality", "92%"],
-                ["Timing precision", "88%"],
-                ["Accuracy", "90%"],
+                ["Tonality", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.noteAccuracy * 100)}%`
+                  : "—"],
+                ["Timing precision", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.timingPrecision * 100)}%`
+                  : "—"],
+                ["Accuracy", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.overallAccuracy * 100)}%`
+                  : "—"],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -1609,19 +1639,42 @@ function PracticePageContent() {
                 </div>
               )}
               <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-neutral-600">
-                Recommendations
+                {isDetectionEnabled ? "Recent performance" : "Performance feedback"}
               </div>
-              <ul className="space-y-1.5">
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Repeat the ascending passage in measures 9–10 at a lower tempo, increasing it as accuracy develops.
-                </li>
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Practice moving from C♯ minor to G major and back until the transition feels even.
-                </li>
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Isolate the off-beat entrances in measures 13–14 and practice them with the metronome.
-                </li>
-              </ul>
+              {isDetectionEnabled ? (
+                recentPerformanceResults.length > 0 ? (
+                  <ul className="space-y-1">
+                    {recentPerformanceResults.map(result => (
+                      <li
+                        key={result.eventId}
+                        className="flex items-center justify-between gap-3 rounded-md bg-neutral-900/80 px-2 py-1 text-[9px] text-neutral-300"
+                      >
+                        <span className="truncate font-mono">
+                          {result.expectedNotes.map(note => midiLabel(note.midi)).join("+")}
+                          {result.expectedNotes.some(note => !note.detected) && " · missing "}
+                          {result.expectedNotes.filter(note => !note.detected).map(note => midiLabel(note.midi)).join("+")}
+                          {result.unexpectedNotes.length > 0 && ` · unexpected ${result.unexpectedNotes.map(note => midiLabel(note.midi)).join("+")}`}
+                        </span>
+                        <span className={`shrink-0 font-bold uppercase ${
+                          result.status === "correct" ? "text-emerald-400" :
+                            result.status === "early" || result.status === "late" ? "text-amber-300" :
+                              "text-rose-400"
+                        }`}>
+                          {result.status}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="rounded-md bg-neutral-900/60 px-2 py-2 text-[10px] text-neutral-500">
+                    Start playback and play the expected notes to build performance feedback.
+                  </div>
+                )
+              ) : (
+                <div className="rounded-md bg-neutral-900/60 px-2 py-2 text-[10px] text-neutral-500">
+                  Enable Mic detect to measure note accuracy, timing precision, and unwanted notes.
+                </div>
+              )}
             </div>
           </div>
         </div>

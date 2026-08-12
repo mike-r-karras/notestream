@@ -122,7 +122,9 @@ export class ScoreAudioMatcher {
       const expired = positionMs > closes;
       const timingStatuses = new Set(detected.map(note => note.status));
       let status: PracticeDetectionResult['status'] = 'waiting';
-      if (complete) {
+      if (unexpectedNotes.length > 0 && complete) {
+        status = 'incorrect';
+      } else if (complete) {
         status = timingStatuses.has('early') ? 'early' :
           timingStatuses.has('late') ? 'late' : 'correct';
       } else if (detected.length > 0) status = expired ? 'partial' : 'waiting';
@@ -138,6 +140,7 @@ export class ScoreAudioMatcher {
         unexpectedNotes,
         timing: {
           expectedOnset: event.onsetMs,
+          toleranceMs: tolerance,
           detectedOnset,
           errorMs: detectedOnset === undefined ? undefined : detectedOnset - event.onsetMs,
         },
