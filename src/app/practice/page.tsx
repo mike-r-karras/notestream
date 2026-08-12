@@ -24,6 +24,8 @@ import {
   setRenderedNoteActive,
   type RenderedNoteRegistry,
 } from "../../components/practice/notation/renderedNoteRegistry";
+import { getNotationMeasures } from "../../components/practice/notation/timeline";
+import { getStaffNumbers } from "../../components/practice/notation/scoreModel";
 
 export interface Folder {
   id: number;
@@ -383,6 +385,13 @@ function PracticePageContent() {
     console.log("Resolved renderer support. type:", displaySong.metadata?.sheetType, "Renderer instance assigned.");
     return resolved;
   }, [displaySong]);
+
+  const notationStaffCount = useMemo(
+    () => displaySong
+      ? getStaffNumbers(getNotationMeasures(displaySong)).length
+      : 1,
+    [displaySong]
+  );
 
   // Build timeline segments and position them
   const positionedSegments = useMemo<PositionedSegment[]>(() => {
@@ -1131,7 +1140,11 @@ function PracticePageContent() {
         <div className="flex-1 flex items-center justify-center min-h-0 px-6">
           <div
             ref={viewportRef}
-            className="w-full h-[85%] max-h-[360px] bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)]"
+            className={`w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] ${
+              notationStaffCount > 2
+                ? "h-[92%] max-h-[520px]"
+                : "h-[85%] max-h-[360px]"
+            }`}
           >
             {activeScore && flattenedMeasures.length > 0 ? (
               <>

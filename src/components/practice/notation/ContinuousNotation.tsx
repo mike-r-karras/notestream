@@ -11,6 +11,7 @@ import {
 } from './scoreModel';
 import { getNotationMeasures, notationEventId } from './timeline';
 import { buildNotationSignatureTimeline } from './signatureTimeline';
+import { layoutLyrics, type LyricAnchor } from './lyricLayout';
 import {
   registerRenderedNote,
   type RenderedNoteRegistry,
@@ -119,6 +120,8 @@ export function ContinuousNotation({
       const renderedNoteElements: Array<{
         id: string;
         note: InstanceType<typeof StaveNote>;
+        event: Parameters<typeof eventDurationQuarter>[0];
+        eventEndAllowance: number;
       }> = [];
 
       measures.forEach((measure, measureIndex) => {
@@ -213,12 +216,12 @@ export function ContinuousNotation({
         );
         staves.forEach(stave => stave.setNoteStartX(sharedNoteStartX));
 
-        // Connect piano staves into a real grand staff. Every measure gets a
-        // right barline connector; the first measure also gets a left line and
-        // brace.
-        if (staffNumbers.length >= 2) {
-          const topStave = staves.get(staffNumbers[0]);
-          const bottomStave = staves.get(staffNumbers[staffNumbers.length - 1]);
+        // Connect each source multi-staff instrument independently. This keeps
+        // a piano brace scoped to its grand staff when a vocal part is present.
+        const staffGroups = measure.staffGroups ?? [staffNumbers];
+        staffGroups.filter(group => group.length >= 2).forEach(group => {
+          const topStave = staves.get(group[0]);
+          const bottomStave = staves.get(group[group.length - 1]);
           if (topStave && bottomStave) {
             const Connector = StaveConnector as unknown as {
               new (top: InstanceType<typeof Stave>, bottom: InstanceType<typeof Stave>): {
@@ -263,7 +266,7 @@ export function ContinuousNotation({
               drawConnector(connectorTypes.BRACE);
             }
           }
-        }
+        });
 
         type RenderedVoice = {
           voice: InstanceType<typeof Voice>;
@@ -354,6 +357,8 @@ export function ContinuousNotation({
                     event
                   ),
                   note,
+                  event,
+                  eventEndAllowance: Math.max(18, eventQuarter * NOTATION_LAYOUT.pixelsPerQuarter),
                 });
               }
 
@@ -488,7 +493,8 @@ export function ContinuousNotation({
 
       const svg = liveHost.querySelector('svg');
       const noteRegistry: RenderedNoteRegistry = new Map();
-      renderedNoteElements.forEach(({ id, note }) => {
+      const lyricAnchors: LyricAnchor[] = [];
+      renderedNoteElements.forEach(({ id, note, event, eventEndAllowance }) => {
         const element = note.getSVGElement();
         if (!element) return;
         const overlay = element.cloneNode(true) as SVGElement;
@@ -498,7 +504,72 @@ export function ContinuousNotation({
         overlay.classList.add('notestream-playback-overlay');
         element.parentNode?.insertBefore(overlay, element.nextSibling);
         registerRenderedNote(noteRegistry, id, overlay);
+        if (event.lyrics?.length) {
+          const x = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+          lyricAnchors.push({
+            eventId: id,
+            x,
+            eventEndX: x + eventEndAllowance,
+            lyrics: event.lyrics,
+          });
+        }
       });
+      if (svg && lyricAnchors.length > 0) {
+        const svgNamespace = 'http://www.w3.org/2000/svg';
+        const lyricColor = '#f5f5f5';
+        const lyricLayer = globalThis.document.createElementNS(svgNamespace, 'g');
+        lyricLayer.classList.add('notestream-lyrics');
+        lyricLayer.setAttribute('fill', lyricColor);
+        lyricLayer.setAttribute('stroke', 'none');
+        lyricLayer.setAttribute('aria-label', 'Score lyrics');
+        const lyricRowTop = top + 108;
+        layoutLyrics(
+          lyricAnchors.sort((left, right) => left.x - right.x),
+          lyricRowTop
+        ).forEach(lyric => {
+          if (lyric.text) {
+            const text = globalThis.document.createElementNS(svgNamespace, 'text');
+            text.setAttribute('x', `${lyric.x}`);
+            text.setAttribute('y', `${lyric.y}`);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+            text.setAttribute('font-size', '14');
+            text.setAttribute('font-weight', '600');
+            text.setAttribute('fill', lyricColor);
+            text.setAttribute('stroke', 'none');
+            text.setAttribute('data-notestream-event-id', lyric.eventId);
+            text.setAttribute('data-notestream-verse', lyric.verse);
+            text.textContent = lyric.text;
+            lyricLayer.appendChild(text);
+          }
+          if (lyric.hyphenX !== undefined) {
+            const hyphen = globalThis.document.createElementNS(svgNamespace, 'text');
+            hyphen.setAttribute('x', `${lyric.hyphenX}`);
+            hyphen.setAttribute('y', `${lyric.y}`);
+            hyphen.setAttribute('text-anchor', 'middle');
+            hyphen.setAttribute('dominant-baseline', 'middle');
+            hyphen.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+            hyphen.setAttribute('font-size', '14');
+            hyphen.setAttribute('font-weight', '600');
+            hyphen.setAttribute('fill', lyricColor);
+            hyphen.setAttribute('stroke', 'none');
+            hyphen.textContent = '–';
+            lyricLayer.appendChild(hyphen);
+          }
+          if (lyric.extension) {
+            const line = globalThis.document.createElementNS(svgNamespace, 'line');
+            line.setAttribute('x1', `${lyric.extension.startX}`);
+            line.setAttribute('x2', `${lyric.extension.endX}`);
+            line.setAttribute('y1', `${lyric.y + 5}`);
+            line.setAttribute('y2', `${lyric.y + 5}`);
+            line.setAttribute('stroke', lyricColor);
+            line.setAttribute('stroke-width', '1');
+            lyricLayer.appendChild(line);
+          }
+        });
+        svg.appendChild(lyricLayer);
+      }
       onRenderedNotes?.(noteRegistry);
       console.log('[Notestream VexFlow v5.2-spacing] grand-staff draw complete', {
         svgPresent: !!svg,

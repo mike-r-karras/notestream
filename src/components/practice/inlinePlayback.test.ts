@@ -74,4 +74,45 @@ describe('buildInlinePlaybackDocument', () => {
       buildInlinePlaybackDocument(document, { measures: [], hasRepeats: false })
     ).toBe(document);
   });
+
+  it('expands an aligned multi-part view without retaining duplicate source parts', () => {
+    const measure = (part: string, staff: number) => ({
+      id: `${part}-m1`,
+      number: 1,
+      attributes: { time: { beats: 4, beatType: 4 } },
+      voices: [{
+        id: `${part}-voice`,
+        number: 1,
+        staff,
+        events: [{
+          id: `${part}-note`,
+          type: 'note',
+          staff,
+          startQuarterNotes: 0,
+          duration: { quarterNotes: 1 },
+          pitches: [{ step: 'C', octave: 4 }],
+        }],
+      }],
+    });
+    const document = {
+      schemaVersion: '1.2',
+      metadata: { sheetType: 'standard-notation' },
+      parts: [
+        { id: 'P1', measures: [measure('P1', 1)] },
+        { id: 'P2', measures: [measure('P2', 1)] },
+      ],
+    } as unknown as EasyScoreDocument;
+
+    const inline = buildInlinePlaybackDocument(document, {
+      hasRepeats: true,
+      measures: [
+        { playbackIndex: 0, sourceMeasureIndex: 0, sourceMeasureId: 'P1-m1', writtenMeasureNumber: 1, repeatPass: 1 },
+        { playbackIndex: 1, sourceMeasureIndex: 0, sourceMeasureId: 'P1-m1', writtenMeasureNumber: 1, repeatPass: 2 },
+      ],
+    });
+
+    expect(inline.parts).toHaveLength(1);
+    expect(getNotationMeasures(inline)).toHaveLength(2);
+    expect(getNotationMeasures(inline).map(item => item.voices?.length)).toEqual([2, 2]);
+  });
 });
