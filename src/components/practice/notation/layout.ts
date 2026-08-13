@@ -68,9 +68,10 @@ function getContentMinimumWidth(measure: StandardNotationMeasure): number {
 
 export function getMeasureWidth(
   measure: StandardNotationMeasure,
-  _measureIndex = 0
+  _measureIndex = 0,
+  contextualQuarterNotes?: number
 ): number {
-  const quarterNotes = getMeasureQuarterNotes(measure);
+  const quarterNotes = contextualQuarterNotes ?? getMeasureQuarterNotes(measure);
   const time = measure.attributes?.time;
   const isOpeningPickup = _measureIndex === 0 && !!time &&
     getOpeningPickupOffsetQuarterNotes(
@@ -78,7 +79,9 @@ export function getMeasureWidth(
       time.beats ?? 4,
       readBeatType(time)
     ) > 0;
-  const visualQuarterNotes = isOpeningPickup
+  const visualQuarterNotes = contextualQuarterNotes !== undefined
+    ? contextualQuarterNotes
+    : isOpeningPickup
     ? getMeasureEventEndQuarterNotes(measure)
     : quarterNotes;
 

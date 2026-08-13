@@ -88,3 +88,52 @@ describe('multi-part notation alignment', () => {
     expect(JSON.stringify(document)).toBe(snapshot);
   });
 });
+
+describe('partial measures at structural boundaries', () => {
+  const partialMeasure = (id: string, barlines: StandardNotationMeasure['barlines'] = []) => ({
+    id,
+    number: Number(id.replace(/\D/g, '')),
+    attributes: { time: { beats: 4, beatType: 4 } },
+    barlines,
+    voices: [{
+      staff: 1,
+      number: 1,
+      events: [{
+        id: `${id}-note`,
+        type: 'note',
+        startQuarterNotes: 0,
+        duration: { quarterNotes: 1 },
+        pitches: [{ step: 'C', octave: 4 }],
+      }],
+    }],
+  });
+
+  it('uses actual duration for short measures after double barlines and repeats', () => {
+    const document = {
+      metadata: { sheetType: 'standard-notation' },
+      parts: [{ id: 'P1', measures: [
+        partialMeasure('m1'),
+        partialMeasure('m2', [{ location: 'right', style: 'light-light' }]),
+        partialMeasure('m3'),
+        partialMeasure('m4', [{ location: 'right', repeat: { direction: 'backward' } }]),
+        partialMeasure('m5'),
+      ] }],
+    } as unknown as EasyScoreDocument;
+
+    expect(buildNotationTimeline(document).map(segment => segment.durationTicks))
+      .toEqual([480, 1920, 480, 1920, 480]);
+  });
+
+  it('keeps an ordinary underfull interior measure at nominal duration', () => {
+    const document = {
+      metadata: { sheetType: 'standard-notation' },
+      parts: [{ id: 'P1', measures: [
+        partialMeasure('m1'),
+        partialMeasure('m2'),
+      ] }],
+    } as unknown as EasyScoreDocument;
+
+    expect(buildNotationTimeline(document).map(segment => segment.durationTicks))
+      .toEqual([480, 1920]);
+  });
+});

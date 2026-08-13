@@ -11,9 +11,7 @@ import type {
 import {
   eventDurationQuarter,
   eventStartQuarter,
-  getMeasureQuarterNotes,
-  getOpeningPickupOffsetQuarterNotes,
-  readBeatType,
+  getContextualMeasureQuarterNotes,
 } from './scoreModel';
 import { getMeasureWidth } from './layout';
 
@@ -141,10 +139,8 @@ export function buildNotationTimeline(
   const measures = getNotationMeasures(document);
   const segments: PracticeSegment[] = [];
   let startTick = 0;
-  const metadataTime = document.metadata?.timeSignature;
-
   measures.forEach((measure, index) => {
-    const quarterNotes = getMeasureQuarterNotes(measure);
+    const quarterNotes = getContextualMeasureQuarterNotes(measures, index);
     const durationTicks = Math.max(
       1,
       Math.round(quarterNotes * TICKS_PER_QUARTER)
@@ -152,15 +148,6 @@ export function buildNotationTimeline(
     const number = measure.number ?? index + 1;
     const measureId =
       measure.id ?? `notation-measure-${number}`;
-    const pickupOffsetQuarterNotes = index === 0
-      ? getOpeningPickupOffsetQuarterNotes(
-          measure,
-          measure.attributes?.time?.beats ?? metadataTime?.[0] ?? 4,
-          measure.attributes?.time
-            ? readBeatType(measure.attributes.time)
-            : metadataTime?.[1] ?? 4
-        )
-      : 0;
 
     const events: PracticeEvent[] = [{
       id: `${measureId}-event`,
@@ -179,7 +166,7 @@ export function buildNotationTimeline(
           startTick:
             startTick +
             Math.round(
-              (eventStartQuarter(event) + pickupOffsetQuarterNotes) *
+              eventStartQuarter(event) *
                 TICKS_PER_QUARTER
             ),
           durationTicks: Math.max(
@@ -199,7 +186,7 @@ export function buildNotationTimeline(
       id: measureId,
       startTick,
       durationTicks,
-      preferredWidth: getMeasureWidth(measure, index),
+      preferredWidth: getMeasureWidth(measure, index, quarterNotes),
       events,
       payload: measure,
     });

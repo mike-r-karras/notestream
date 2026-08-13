@@ -7,7 +7,7 @@ import { buildNotationTimeline, getNotationMeasures } from './notation/timeline'
 import { resolvePlaybackSequence } from './playbackResolver';
 
 describe('buildInlinePlaybackDocument', () => {
-  it('expands Fur Elise without repeating the pickup or mutating the source', () => {
+  it('expands Fur Elise including its pickup without mutating the source', () => {
     const source = JSON.parse(
       readFileSync(
         new URL('../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
@@ -23,7 +23,7 @@ describe('buildInlinePlaybackDocument', () => {
     expect(inlineMeasures.map(measure => measure.number)).toEqual(
       sequence.measures.map(entry => entry.writtenMeasureNumber)
     );
-    expect(inlineMeasures.filter(measure => measure.number === 0)).toHaveLength(1);
+    expect(inlineMeasures.filter(measure => measure.number === 0)).toHaveLength(2);
     expect(inlineMeasures.filter(measure => measure.number === 1)).toHaveLength(2);
     expect(new Set(inlineMeasures.map(measure => measure.id)).size).toBe(inlineMeasures.length);
     expect(

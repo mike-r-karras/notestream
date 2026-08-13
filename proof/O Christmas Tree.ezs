@@ -2070,6 +2070,1261 @@
         }
       ],
       "name": "Voice"
+    },
+    {
+      "id": "P2",
+      "measures": [
+        {
+          "id": "P2-m0",
+          "number": 0,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m0-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m0-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 0,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m1",
+          "number": 1,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m1-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m1-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 1,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 6,
+                    "quarterNotes": 3.0,
+                    "vexflow": "h",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "E",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m2",
+          "number": 2,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m2-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m2-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 2,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 6,
+                    "quarterNotes": 3.0,
+                    "vexflow": "h",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m3",
+          "number": 3,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m3-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m3-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 3,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 4,
+                    "quarterNotes": 2.0,
+                    "vexflow": "h",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "F",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m3-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 3,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 4,
+                  "startQuarterNotes": 2.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m4",
+          "number": 4,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m4-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m4-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 4,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 4,
+                    "quarterNotes": 2.0,
+                    "vexflow": "h",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": [
+            {
+              "location": "right",
+              "style": "light-heavy",
+              "repeat": {
+                "direction": "backward"
+              }
+            }
+          ]
+        },
+        {
+          "id": "P2-m6",
+          "number": 6,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m6-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m6-s1-v1-e1",
+                  "type": "rest",
+                  "measureNumber": 6,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m5",
+          "number": 5,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m5-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m5-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 5,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "begin"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m5-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 5,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 1,
+                  "startQuarterNotes": 0.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "end"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m5-s1-v1-e3",
+                  "type": "note",
+                  "measureNumber": 5,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 2,
+                  "startQuarterNotes": 1.0,
+                  "duration": {
+                    "divisions": 3,
+                    "quarterNotes": 1.5,
+                    "vexflow": "q",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m5-s1-v1-e4",
+                  "type": "note",
+                  "measureNumber": 5,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 5,
+                  "startQuarterNotes": 2.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m6",
+          "number": 6,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m6-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m6-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 6,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "begin"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m6-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 6,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 1,
+                  "startQuarterNotes": 0.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "end"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m6-s1-v1-e3",
+                  "type": "note",
+                  "measureNumber": 6,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 2,
+                  "startQuarterNotes": 1.0,
+                  "duration": {
+                    "divisions": 3,
+                    "quarterNotes": 1.5,
+                    "vexflow": "q",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m6-s1-v1-e4",
+                  "type": "note",
+                  "measureNumber": 6,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 5,
+                  "startQuarterNotes": 2.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m7",
+          "number": 7,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m7-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m7-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 7,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "begin"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m7-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 7,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 1,
+                  "startQuarterNotes": 0.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "end"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m7-s1-v1-e3",
+                  "type": "note",
+                  "measureNumber": 7,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 2,
+                  "startQuarterNotes": 1.0,
+                  "duration": {
+                    "divisions": 3,
+                    "quarterNotes": 1.5,
+                    "vexflow": "q",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m7-s1-v1-e4",
+                  "type": "note",
+                  "measureNumber": 7,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 5,
+                  "startQuarterNotes": 2.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m8",
+          "number": 8,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m8-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m8-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 8,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "begin"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m8-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 8,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 1,
+                  "startQuarterNotes": 0.5,
+                  "duration": {
+                    "divisions": 1,
+                    "quarterNotes": 0.5,
+                    "vexflow": "8",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [
+                    {
+                      "number": 1,
+                      "value": "end"
+                    }
+                  ],
+                  "lyrics": []
+                },
+                {
+                  "id": "P2-m8-s1-v1-e3",
+                  "type": "note",
+                  "measureNumber": 8,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 2,
+                  "startQuarterNotes": 1.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": [
+            {
+              "location": "right",
+              "style": "light-light"
+            }
+          ]
+        },
+        {
+          "id": "P2-m9",
+          "number": 9,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m9-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m9-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 9,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m10",
+          "number": 10,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m10-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m10-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 10,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 6,
+                    "quarterNotes": 3.0,
+                    "vexflow": "h",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "E",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m11",
+          "number": 11,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m11-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m11-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 11,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 6,
+                    "quarterNotes": 3.0,
+                    "vexflow": "h",
+                    "dots": 1
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": []
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m12",
+          "number": 12,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m12-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m12-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 12,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 4,
+                    "quarterNotes": 2.0,
+                    "vexflow": "h",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "F",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": [
+                    {
+                      "number": "1",
+                      "text": "©",
+                      "syllabic": "single",
+                      "placement": "below"
+                    }
+                  ]
+                },
+                {
+                  "id": "P2-m12-s1-v1-e2",
+                  "type": "note",
+                  "measureNumber": 12,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 4,
+                  "startQuarterNotes": 2.0,
+                  "duration": {
+                    "divisions": 2,
+                    "quarterNotes": 1.0,
+                    "vexflow": "q",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "G",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "down",
+                  "beams": [],
+                  "lyrics": [
+                    {
+                      "number": "1",
+                      "text": "Balloon",
+                      "syllabic": "single",
+                      "placement": "below"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": []
+        },
+        {
+          "id": "P2-m13",
+          "number": 13,
+          "attributes": {
+            "divisions": 2,
+            "time": {
+              "beats": 3,
+              "beatType": 4
+            },
+            "clef": {
+              "sign": "F",
+              "line": 4
+            },
+            "clefs": {
+              "1": {
+                "sign": "F",
+                "line": 4
+              }
+            }
+          },
+          "voices": [
+            {
+              "id": "P2-m13-s1-v1",
+              "number": 1,
+              "staff": 1,
+              "events": [
+                {
+                  "id": "P2-m13-s1-v1-e1",
+                  "type": "note",
+                  "measureNumber": 13,
+                  "voice": 1,
+                  "staff": 1,
+                  "startDivisions": 0,
+                  "startQuarterNotes": 0.0,
+                  "duration": {
+                    "divisions": 4,
+                    "quarterNotes": 2.0,
+                    "vexflow": "h",
+                    "dots": 0
+                  },
+                  "pitches": [
+                    {
+                      "step": "C",
+                      "octave": 3,
+                      "alter": 0
+                    }
+                  ],
+                  "stem": "up",
+                  "beams": [],
+                  "lyrics": [
+                    {
+                      "number": "1",
+                      "text": "Ltd",
+                      "syllabic": "single",
+                      "placement": "below"
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "tempoEvents": [],
+          "barlines": [
+            {
+              "location": "right",
+              "style": "light-heavy"
+            }
+          ]
+        }
+      ],
+      "name": "Voice"
     }
   ],
   "difficulty": {
@@ -2100,10 +3355,5 @@
       "bpm": 0
     }
   },
-  "warnings": [
-    {
-      "code": "MULTIPLE_PARTS_IGNORED",
-      "message": "The score contains 2 parts. Converter version 1 only converts the first part."
-    }
-  ]
+  "warnings": []
 }

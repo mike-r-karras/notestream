@@ -99,7 +99,7 @@ describe('buildNotationPlaybackModel', () => {
     expect(activeNoteIdsAtTick(model.notes, 720)).toEqual(new Set());
   });
 
-  it('right-aligns an underfilled opening measure as a pickup', () => {
+  it('uses the actual duration of an underfilled opening pickup', () => {
     const document = score([{
       id: 'P1-m1',
       number: 1,
@@ -116,20 +116,20 @@ describe('buildNotationPlaybackModel', () => {
     const model = buildNotationPlaybackModel(document);
     const timeline = buildNotationTimeline(document);
 
-    expect(model.totalTicks).toBe(720);
-    expect(model.beats.map(beat => beat.tick)).toEqual([0, 240, 480]);
+    expect(model.totalTicks).toBe(240);
+    expect(model.beats.map(beat => beat.tick)).toEqual([0]);
     expect(model.notes.map(note => [note.id, note.startTick])).toEqual([
-      ['P1-m1::pickup-1', 480],
-      ['P1-m1::pickup-2', 600],
+      ['P1-m1::pickup-1', 0],
+      ['P1-m1::pickup-2', 120],
     ]);
-    expect(model.tones.map(tone => tone.startTick)).toEqual([480, 600]);
+    expect(model.tones.map(tone => tone.startTick)).toEqual([0, 120]);
     expect(
       timeline[0].events
         .filter(event => event.kind === 'note')
         .map(event => [event.id, event.startTick])
     ).toEqual([
-      ['P1-m1::pickup-1', 480],
-      ['P1-m1::pickup-2', 600],
+      ['P1-m1::pickup-1', 0],
+      ['P1-m1::pickup-2', 120],
     ]);
   });
 

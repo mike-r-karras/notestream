@@ -3,8 +3,7 @@ import {
   eventDurationQuarter,
   eventIsSounding,
   eventStartQuarter,
-  getMeasureEventEndQuarterNotes,
-  getOpeningPickupOffsetQuarterNotes,
+  getContextualMeasureQuarterNotes,
   readBeatType,
 } from './notation/scoreModel';
 import {
@@ -89,12 +88,10 @@ export function pitchToMidi(pitch: {
 
 function playbackMeasureQuarterNotes(
   measure: ReturnType<typeof getNotationMeasures>[number],
-  beats: number,
-  beatType: number
+  measures: ReturnType<typeof getNotationMeasures>,
+  measureIndex: number
 ): number {
-  const declared = beats * (4 / beatType);
-  const eventEnd = getMeasureEventEndQuarterNotes(measure);
-  const duration = Math.max(declared, eventEnd);
+  const duration = getContextualMeasureQuarterNotes(measures, measureIndex);
   return duration > 0 ? duration : 1;
 }
 
@@ -147,21 +144,13 @@ export function buildNotationPlaybackModel(
       Math.round(
         playbackMeasureQuarterNotes(
           measure,
-          measureBeats,
-          measureBeatType
+          sourceMeasures,
+          sourceMeasureIndex
         ) * TICKS_PER_QUARTER
       )
     );
     const beatTicks = TICKS_PER_QUARTER * (4 / measureBeatType);
     const measureNumber = measure.number ?? sourceMeasureIndex + 1;
-    const pickupOffsetQuarterNotes = sourceMeasureIndex === 0
-      ? getOpeningPickupOffsetQuarterNotes(
-          measure,
-          measureBeats,
-          measureBeatType
-        )
-      : 0;
-
     measures.push({
       number: measureNumber,
       sourceMeasureIndex,
@@ -194,7 +183,7 @@ export function buildNotationPlaybackModel(
         );
         const eventStartTick =
           startTick + Math.round(
-            (eventStartQuarter(event) + pickupOffsetQuarterNotes) *
+          eventStartQuarter(event) *
               TICKS_PER_QUARTER
           );
         const eventDurationTicks = Math.max(
