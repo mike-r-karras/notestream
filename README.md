@@ -20,6 +20,7 @@ The intended conversion pipeline is:
 ```text
 PDF -> Audiveris OMR -> MusicXML -> FastAPI normalization -> EasyScore JSON -> practice UI
 ```
+<img width="1830" height="846" alt="upload" src="https://github.com/user-attachments/assets/1769ab6b-63b6-4d66-865c-a7072c5f85ea" />
 
 ### Practice rendering
 
@@ -41,6 +42,8 @@ Notestream detects chord/lyric, standard-notation, tablature, hybrid, and unknow
 - Optionally enable score-guided microphone detection. The detector checks expected pitches and timing near the current cursor, handles simultaneous chord tones, and reports accuracy, tonality, timing, missed notes, and nearby mistakes.
 
 Microphone detection is deliberately constrained: it does not transcribe arbitrary audio, follow the performer autonomously, or advance the cursor. It requires browser permission and a secure context (`https://` or `localhost`).
+
+<img width="1887" height="837" alt="playback" src="https://github.com/user-attachments/assets/db04e760-b726-4eb9-9c13-6c5050afc5c6" />
 
 ## Architecture
 
