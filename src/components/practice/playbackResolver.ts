@@ -1,8 +1,4 @@
 import type { EasyScoreDocument } from '../../types/easyScore';
-import {
-  getOpeningPickupOffsetQuarterNotes,
-  readBeatType,
-} from './notation/scoreModel';
 import { getNotationMeasures } from './notation/timeline';
 import type {
   StandardNotationBarline,
@@ -77,24 +73,6 @@ function repeatBarline(
   );
 }
 
-function firstRepeatStartIndex(
-  document: EasyScoreDocument,
-  measures: StandardNotationMeasure[]
-): number {
-  if (measures.length < 2) return 0;
-
-  const opening = measures[0];
-  const metadataTime = document.metadata?.timeSignature;
-  const beats = opening.attributes?.time?.beats ?? metadataTime?.[0] ?? 4;
-  const beatType = opening.attributes?.time
-    ? readBeatType(opening.attributes.time)
-    : metadataTime?.[1] ?? 4;
-
-  return getOpeningPickupOffsetQuarterNotes(opening, beats, beatType) > 0
-    ? 1
-    : 0;
-}
-
 function repeatPassCount(
   backwardIndex: number,
   memberships: Array<Set<number>>,
@@ -132,7 +110,10 @@ export function resolvePlaybackSequence(
   if (measures.length === 0) return { measures: [], hasRepeats: false };
 
   const memberships = endingMembership(measures);
-  const fallbackRepeatStart = firstRepeatStartIndex(document, measures);
+  // A backward repeat without a matching forward repeat returns to the true
+  // beginning of the piece. An opening partial/pickup measure is musical
+  // content and therefore participates in that repeat.
+  const fallbackRepeatStart = 0;
   const resolved: ResolvedPlaybackMeasure[] = [];
   const hasRepeats = measures.some(measure =>
     (measure.barlines ?? []).some(barline => !!barline.repeat)

@@ -6,12 +6,16 @@ import { writtenMeasureNotation } from './notationMetadata';
 import {
   eventDurationQuarter,
   eventStartQuarter,
-  getOpeningPickupOffsetQuarterNotes,
   getStaffNumbers,
   normalizeVoicesForStaff,
-  readBeatType,
 } from './scoreModel';
 import { getNotationMeasures, notationEventId } from './timeline';
+import { buildNotationSignatureTimeline } from './signatureTimeline';
+import { layoutLyrics, type LyricAnchor } from './lyricLayout';
+import {
+  registerRenderedNote,
+  type RenderedNoteRegistry,
+} from './renderedNoteRegistry';
 import { notationThemeStyle, readNotationTheme } from './theme';
 import {
   accidentalFromAlter,
@@ -36,7 +40,7 @@ export function ContinuousNotation({
 }: {
   document: EasyScoreDocument;
   segments: PositionedSegment[];
-  onRenderedNotes?: (notes: Map<string, SVGElement>) => void;
+  onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
 
@@ -48,6 +52,20 @@ export function ContinuousNotation({
 
     const draw = async () => {
       const VF = await import('vexflow');
+      if (cancelled || !hostRef.current) return;
+
+      // The bundled VexFlow entry registers its FontFace objects while the
+      // dynamic import resolves, but their browser loads can still be pending.
+      // A cold direct navigation can otherwise format with fallback metrics
+      // and draw with Bravura metrics, progressively separating noteheads,
+      // stems, flags, and beams. Client-side navigation hid the race because
+      // the fonts had finished loading by the time the score was selected.
+      if ('fonts' in globalThis.document) {
+        await Promise.all([
+          globalThis.document.fonts.load('30px Bravura'),
+          globalThis.document.fonts.load('30px Academico'),
+        ]);
+      }
       if (cancelled || !hostRef.current) return;
 
       const {
@@ -68,6 +86,7 @@ export function ContinuousNotation({
       const measures = getNotationMeasures(document);
       if (measures.length === 0) return;
       const writtenNotation = writtenMeasureNotation(measures);
+      const signatureTimeline = buildNotationSignatureTimeline(document);
 
       const staffNumbers = getStaffNumbers(measures);
 
@@ -101,6 +120,8 @@ export function ContinuousNotation({
       const renderedNoteElements: Array<{
         id: string;
         note: InstanceType<typeof StaveNote>;
+        event: Parameters<typeof eventDurationQuarter>[0];
+        eventEndAllowance: number;
       }> = [];
 
       measures.forEach((measure, measureIndex) => {
@@ -108,16 +129,10 @@ export function ContinuousNotation({
         if (!segment) return;
 
         const attributes = measure.attributes ?? {};
-        const time = attributes.time;
-        const metadataTime = document.metadata?.timeSignature;
-        const beats = time?.beats ?? metadataTime?.[0] ?? 4;
-        const beatValue = time
-          ? readBeatType(time)
-          : metadataTime?.[1] ?? 4;
-        const pickupOffsetQuarter = measureIndex === 0
-          ? getOpeningPickupOffsetQuarterNotes(measure, beats, beatValue)
-          : 0;
-        const keySignature = keySignatureFromFifths(attributes.key?.fifths ?? 0);
+        const signature = signatureTimeline[measureIndex];
+        const beats = signature?.beats ?? 4;
+        const beatValue = signature?.beatType ?? 4;
+        const keySignature = keySignatureFromFifths(signature?.fifths ?? 0);
         const measureNotation = writtenNotation[measureIndex];
 
         // Build all staves for the measure before formatting any voices. This
@@ -125,13 +140,20 @@ export function ContinuousNotation({
         const staves = new Map<number, InstanceType<typeof Stave>>();
         staffNumbers.forEach((staffNumber, staffIndex) => {
           const staveY = top + staffIndex * staffGap;
-          const stave = new Stave(segment.x, staveY, segment.width);
-          const clef = attributes.clefs?.[String(staffNumber)]
-            ?? (staffNumber === 1 ? attributes.clef : undefined);
+          const stave = new Stave(
+            segment.x + (measureIndex === 0 ? 10 : 0),
+            staveY,
+            segment.width - (measureIndex === 0 ? 10 : 0)
+          );
+          const clefName = getClefName(signature?.clefs[staffNumber]);
 
-          if (measureIndex === 0) {
-            stave.addClef(getClefName(clef?.sign));
+          if (signature?.changed.clefStaffs.includes(staffNumber)) {
+            stave.addClef(clefName);
+          }
+          if (signature?.changed.key) {
             stave.addKeySignature(keySignature);
+          }
+          if (signature?.changed.time) {
             stave.addTimeSignature(`${beats}/${beatValue}`);
           }
 
@@ -194,12 +216,12 @@ export function ContinuousNotation({
         );
         staves.forEach(stave => stave.setNoteStartX(sharedNoteStartX));
 
-        // Connect piano staves into a real grand staff. Every measure gets a
-        // right barline connector; the first measure also gets a left line and
-        // brace.
-        if (staffNumbers.length >= 2) {
-          const topStave = staves.get(staffNumbers[0]);
-          const bottomStave = staves.get(staffNumbers[staffNumbers.length - 1]);
+        // Connect each source multi-staff instrument independently. This keeps
+        // a piano brace scoped to its grand staff when a vocal part is present.
+        const staffGroups = measure.staffGroups ?? [staffNumbers];
+        staffGroups.filter(group => group.length >= 2).forEach(group => {
+          const topStave = staves.get(group[0]);
+          const bottomStave = staves.get(group[group.length - 1]);
           if (topStave && bottomStave) {
             const Connector = StaveConnector as unknown as {
               new (top: InstanceType<typeof Stave>, bottom: InstanceType<typeof Stave>): {
@@ -244,7 +266,7 @@ export function ContinuousNotation({
               drawConnector(connectorTypes.BRACE);
             }
           }
-        }
+        });
 
         type RenderedVoice = {
           voice: InstanceType<typeof Voice>;
@@ -274,9 +296,7 @@ export function ContinuousNotation({
               renderedVoices: voicesForStaff.length,
             });
           }
-          const clef = attributes.clefs?.[String(staffNumber)]
-            ?? (staffNumber === 1 ? attributes.clef : undefined);
-          const clefName = getClefName(clef?.sign);
+          const clefName = getClefName(signature?.clefs[staffNumber]);
 
           voicesForStaff.forEach((sourceVoice, voiceIndex) => {
             const sourceEvents = [...(sourceVoice.events ?? [])].sort((a, b) => {
@@ -299,8 +319,8 @@ export function ContinuousNotation({
               const sourceStartQuarter =
                 event.startQuarterNotes ??
                 event.start_quarter_notes ??
-                cursorQuarter - pickupOffsetQuarter;
-              const startQuarter = sourceStartQuarter + pickupOffsetQuarter;
+                cursorQuarter;
+              const startQuarter = sourceStartQuarter;
               const eventQuarter = eventDurationQuarter(event);
 
               // VexFlow Voice is sequential. Preserve the converter's absolute
@@ -337,6 +357,8 @@ export function ContinuousNotation({
                     event
                   ),
                   note,
+                  event,
+                  eventEndAllowance: Math.max(18, eventQuarter * NOTATION_LAYOUT.pixelsPerQuarter),
                 });
               }
 
@@ -470,8 +492,9 @@ export function ContinuousNotation({
       });
 
       const svg = liveHost.querySelector('svg');
-      const noteRegistry = new Map<string, SVGElement>();
-      renderedNoteElements.forEach(({ id, note }) => {
+      const noteRegistry: RenderedNoteRegistry = new Map();
+      const lyricAnchors: LyricAnchor[] = [];
+      renderedNoteElements.forEach(({ id, note, event, eventEndAllowance }) => {
         const element = note.getSVGElement();
         if (!element) return;
         const overlay = element.cloneNode(true) as SVGElement;
@@ -480,8 +503,73 @@ export function ContinuousNotation({
         overlay.setAttribute('data-notestream-event-id', id);
         overlay.classList.add('notestream-playback-overlay');
         element.parentNode?.insertBefore(overlay, element.nextSibling);
-        noteRegistry.set(id, overlay);
+        registerRenderedNote(noteRegistry, id, overlay);
+        if (event.lyrics?.length) {
+          const x = (note.getNoteHeadBeginX() + note.getNoteHeadEndX()) / 2;
+          lyricAnchors.push({
+            eventId: id,
+            x,
+            eventEndX: x + eventEndAllowance,
+            lyrics: event.lyrics,
+          });
+        }
       });
+      if (svg && lyricAnchors.length > 0) {
+        const svgNamespace = 'http://www.w3.org/2000/svg';
+        const lyricColor = '#f5f5f5';
+        const lyricLayer = globalThis.document.createElementNS(svgNamespace, 'g');
+        lyricLayer.classList.add('notestream-lyrics');
+        lyricLayer.setAttribute('fill', lyricColor);
+        lyricLayer.setAttribute('stroke', 'none');
+        lyricLayer.setAttribute('aria-label', 'Score lyrics');
+        const lyricRowTop = top + 108;
+        layoutLyrics(
+          lyricAnchors.sort((left, right) => left.x - right.x),
+          lyricRowTop
+        ).forEach(lyric => {
+          if (lyric.text) {
+            const text = globalThis.document.createElementNS(svgNamespace, 'text');
+            text.setAttribute('x', `${lyric.x}`);
+            text.setAttribute('y', `${lyric.y}`);
+            text.setAttribute('text-anchor', 'middle');
+            text.setAttribute('dominant-baseline', 'middle');
+            text.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+            text.setAttribute('font-size', '14');
+            text.setAttribute('font-weight', '600');
+            text.setAttribute('fill', lyricColor);
+            text.setAttribute('stroke', 'none');
+            text.setAttribute('data-notestream-event-id', lyric.eventId);
+            text.setAttribute('data-notestream-verse', lyric.verse);
+            text.textContent = lyric.text;
+            lyricLayer.appendChild(text);
+          }
+          if (lyric.hyphenX !== undefined) {
+            const hyphen = globalThis.document.createElementNS(svgNamespace, 'text');
+            hyphen.setAttribute('x', `${lyric.hyphenX}`);
+            hyphen.setAttribute('y', `${lyric.y}`);
+            hyphen.setAttribute('text-anchor', 'middle');
+            hyphen.setAttribute('dominant-baseline', 'middle');
+            hyphen.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+            hyphen.setAttribute('font-size', '14');
+            hyphen.setAttribute('font-weight', '600');
+            hyphen.setAttribute('fill', lyricColor);
+            hyphen.setAttribute('stroke', 'none');
+            hyphen.textContent = '–';
+            lyricLayer.appendChild(hyphen);
+          }
+          if (lyric.extension) {
+            const line = globalThis.document.createElementNS(svgNamespace, 'line');
+            line.setAttribute('x1', `${lyric.extension.startX}`);
+            line.setAttribute('x2', `${lyric.extension.endX}`);
+            line.setAttribute('y1', `${lyric.y + 5}`);
+            line.setAttribute('y2', `${lyric.y + 5}`);
+            line.setAttribute('stroke', lyricColor);
+            line.setAttribute('stroke-width', '1');
+            lyricLayer.appendChild(line);
+          }
+        });
+        svg.appendChild(lyricLayer);
+      }
       onRenderedNotes?.(noteRegistry);
       console.log('[Notestream VexFlow v5.2-spacing] grand-staff draw complete', {
         svgPresent: !!svg,

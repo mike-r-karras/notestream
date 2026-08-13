@@ -19,7 +19,23 @@ import {
 } from "../../components/practice/playbackModel";
 import { resolvePlaybackSequence } from "../../components/practice/playbackResolver";
 import { PianoNoteOutput } from "../../components/practice/pianoNoteOutput";
+import {
+  PracticeAudioDetector,
+  type PracticeAudioDebugSnapshot,
+} from "../../components/practice/audio/practiceAudioDetector";
+import { buildExpectedNoteEvents } from "../../components/practice/detection/scoreExpectedEvents";
+import {
+  mergePerformanceResults,
+  scorePracticePerformance,
+} from "../../components/practice/detection/practicePerformanceScorer";
+import type { PracticeDetectionResult } from "../../components/practice/detection/practiceDetectionTypes";
 import { buildInlinePlaybackDocument } from "../../components/practice/inlinePlayback";
+import {
+  setRenderedNoteActive,
+  type RenderedNoteRegistry,
+} from "../../components/practice/notation/renderedNoteRegistry";
+import { getNotationMeasures } from "../../components/practice/notation/timeline";
+import { getStaffNumbers } from "../../components/practice/notation/scoreModel";
 
 export interface Folder {
   id: number;
@@ -92,6 +108,11 @@ const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
 
 type PracticeRepeatMode = "inline" | "scrollback";
 
+function midiLabel(midi: number): string {
+  const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
+  return `${names[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
+
 export default function PracticePage() {
   return (
     <Suspense
@@ -152,7 +173,11 @@ function PracticePageContent() {
   const [beatMeasure, setBeatMeasure] = useState<number>(0);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
   const [currentTick, setCurrentTick] = useState<number>(0);
-  const [renderedNotes, setRenderedNotes] = useState<Map<string, SVGElement>>(new Map());
+  const [renderedNotes, setRenderedNotes] = useState<RenderedNoteRegistry>(new Map());
+  const [isDetectionEnabled, setIsDetectionEnabled] = useState(false);
+  const [detectionSnapshot, setDetectionSnapshot] = useState<PracticeAudioDebugSnapshot | null>(null);
+  const [detectionError, setDetectionError] = useState<string | null>(null);
+  const [performanceResults, setPerformanceResults] = useState<Map<string, PracticeDetectionResult>>(new Map());
 
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
@@ -160,7 +185,7 @@ function PracticePageContent() {
   const playbackStartTimeRef = useRef<number>(0);
   const playbackStartElapsedRef = useRef<number>(0);
   const includeStartingBeatRef = useRef<boolean>(false);
-  const renderedNotesRef = useRef<Map<string, SVGElement>>(new Map());
+  const renderedNotesRef = useRef<RenderedNoteRegistry>(new Map());
   const highlightedIdsRef = useRef<Set<string>>(new Set());
   const playbackHasStartedRef = useRef<boolean>(false);
 
@@ -169,6 +194,7 @@ function PracticePageContent() {
   const volumeRef = useRef<number>(100);
   const pianoOutputRef = useRef<PianoNoteOutput | null>(null);
   const scheduledToneIdsRef = useRef<Set<string>>(new Set());
+  const audioDetectorRef = useRef<PracticeAudioDetector | null>(null);
 
   // Load and Persist State for Storage Panel
   useEffect(() => {
@@ -380,6 +406,13 @@ function PracticePageContent() {
     return resolved;
   }, [displaySong]);
 
+  const notationStaffCount = useMemo(
+    () => displaySong
+      ? getStaffNumbers(getNotationMeasures(displaySong)).length
+      : 1,
+    [displaySong]
+  );
+
   // Build timeline segments and position them
   const positionedSegments = useMemo<PositionedSegment[]>(() => {
     if (!displaySong || !renderer) {
@@ -451,7 +484,7 @@ function PracticePageContent() {
 
   const clearHighlights = useCallback(() => {
     highlightedIdsRef.current.forEach(id => {
-      renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+      setRenderedNoteActive(renderedNotesRef.current, id, false);
     });
     highlightedIdsRef.current = new Set();
   }, []);
@@ -478,18 +511,18 @@ function PracticePageContent() {
     const nextIds = activeNoteIdsAtTick(playbackModel.notes, tick);
     highlightedIdsRef.current.forEach(id => {
       if (!nextIds.has(id)) {
-        renderedNotesRef.current.get(id)?.classList.remove("notestream-playback-active");
+        setRenderedNoteActive(renderedNotesRef.current, id, false);
       }
     });
     nextIds.forEach(id => {
       if (!highlightedIdsRef.current.has(id)) {
-        renderedNotesRef.current.get(id)?.classList.add("notestream-playback-active");
+        setRenderedNoteActive(renderedNotesRef.current, id, true);
       }
     });
     highlightedIdsRef.current = nextIds;
   }, [playbackModel.notes]);
 
-  const handleRenderedNotes = useCallback((notes: Map<string, SVGElement>) => {
+  const handleRenderedNotes = useCallback((notes: RenderedNoteRegistry) => {
     setRenderedNotes(notes);
   }, []);
 
@@ -552,6 +585,7 @@ function PracticePageContent() {
         playbackHasStartedRef.current = false;
         pianoOutputRef.current?.allNotesOff();
         scheduledToneIdsRef.current.clear();
+        setPerformanceResults(new Map());
         clearHighlights();
       });
     }
@@ -710,6 +744,65 @@ function PracticePageContent() {
   }, [getAudioContext]);
 
   const totalTicks = playbackModel.totalTicks;
+  const expectedDetectionEvents = useMemo(
+    () => buildExpectedNoteEvents(playbackModel, bpm),
+    [playbackModel, bpm]
+  );
+  const detectionPlaybackModelRef = useRef(playbackModel);
+  const detectionBpmRef = useRef(bpm);
+  const detectionExpectedEventsRef = useRef(expectedDetectionEvents);
+  const hasExpectedDetectionEvents = expectedDetectionEvents.length > 0;
+  const performanceMetrics = useMemo(
+    () => scorePracticePerformance(performanceResults.values()),
+    [performanceResults]
+  );
+  const recentPerformanceResults = useMemo(
+    () => [...performanceResults.values()]
+      .filter(result => result.status !== "waiting")
+      .sort((a, b) => b.timestamp - a.timestamp)
+      .slice(0, 4),
+    [performanceResults]
+  );
+  const handleDetectionSnapshot = useCallback((snapshot: PracticeAudioDebugSnapshot) => {
+    setDetectionSnapshot(snapshot);
+    setPerformanceResults(current => mergePerformanceResults(current, snapshot.results));
+  }, []);
+
+  useEffect(() => {
+    detectionPlaybackModelRef.current = playbackModel;
+    detectionBpmRef.current = bpm;
+    detectionExpectedEventsRef.current = expectedDetectionEvents;
+    audioDetectorRef.current?.setExpectedEvents(expectedDetectionEvents);
+  }, [bpm, expectedDetectionEvents, playbackModel]);
+
+  useEffect(() => {
+    if (!isDetectionEnabled || !hasExpectedDetectionEvents) {
+      audioDetectorRef.current?.stop();
+      audioDetectorRef.current = null;
+      return;
+    }
+    const detector = new PracticeAudioDetector(
+      getAudioContext(),
+      detectionExpectedEventsRef.current,
+      () => tickToElapsedMs(
+        detectionPlaybackModelRef.current,
+        currentTickRef.current,
+        detectionBpmRef.current
+      ),
+      handleDetectionSnapshot
+    );
+    audioDetectorRef.current = detector;
+    void detector.start().catch(error => {
+      detector.stop();
+      if (audioDetectorRef.current === detector) audioDetectorRef.current = null;
+      setIsDetectionEnabled(false);
+      setDetectionError(error instanceof Error ? error.message : "Microphone access failed");
+    });
+    return () => {
+      detector.stop();
+      if (audioDetectorRef.current === detector) audioDetectorRef.current = null;
+    };
+  }, [getAudioContext, handleDetectionSnapshot, hasExpectedDetectionEvents, isDetectionEnabled]);
 
   // Sync refs
   useEffect(() => {
@@ -851,7 +944,7 @@ function PracticePageContent() {
         pianoOutputRef.current?.allNotesOff();
         scheduledToneIdsRef.current.clear();
         clearHighlights();
-        void audioContextRef.current?.suspend();
+        if (!isDetectionEnabled) void audioContextRef.current?.suspend();
       } else {
         animId = requestAnimationFrame(loop);
       }
@@ -864,7 +957,7 @@ function PracticePageContent() {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
@@ -1127,7 +1220,11 @@ function PracticePageContent() {
         <div className="flex-1 flex items-center justify-center min-h-0 px-6">
           <div
             ref={viewportRef}
-            className="w-full h-[85%] max-h-[360px] bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)]"
+            className={`w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] ${
+              notationStaffCount > 2
+                ? "h-[92%] max-h-[520px]"
+                : "h-[85%] max-h-[360px]"
+            }`}
           >
             {activeScore && flattenedMeasures.length > 0 ? (
               <>
@@ -1157,6 +1254,15 @@ function PracticePageContent() {
                         onRenderedNotes: handleRenderedNotes,
                       })}
                     </div>
+                    {renderer.renderStationaryOverlay?.(displaySong, positionedSegments, {
+                      isPlaying,
+                      beatCount,
+                      currentTick,
+                      offsetX,
+                      segments: positionedSegments,
+                      parsedInst,
+                      onRenderedNotes: handleRenderedNotes,
+                    })}
                   </div>
                 ) : (
                   <>
@@ -1239,6 +1345,24 @@ function PracticePageContent() {
             </span>
 
             <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setDetectionSnapshot(null);
+                  setDetectionError(null);
+                  if (!isDetectionEnabled) setPerformanceResults(new Map());
+                  setIsDetectionEnabled(enabled => !enabled);
+                }}
+                disabled={expectedDetectionEvents.length === 0}
+                className={`rounded-md px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide transition-colors disabled:opacity-40 ${
+                  isDetectionEnabled
+                    ? "bg-emerald-700 text-white"
+                    : "bg-neutral-800 text-neutral-400 hover:text-emerald-300"
+                }`}
+                title="Enable score-guided microphone detection"
+              >
+                {isDetectionEnabled ? "Mic on" : "Mic detect"}
+              </button>
               {/* Metronome Beat Flash Indicator */}
               {isPlaying && (
                 <div className="flex items-center gap-1.5">
@@ -1317,7 +1441,7 @@ function PracticePageContent() {
                     setCurrentTick(currentTickRef.current);
                     pianoOutputRef.current?.allNotesOff();
                     scheduledToneIdsRef.current.clear();
-                    void audioContextRef.current?.suspend();
+                    if (!isDetectionEnabled) void audioContextRef.current?.suspend();
                   }
                 }
               }}
@@ -1359,8 +1483,9 @@ function PracticePageContent() {
                 playbackHasStartedRef.current = false;
                 pianoOutputRef.current?.allNotesOff();
                 scheduledToneIdsRef.current.clear();
+                setPerformanceResults(new Map());
                 clearHighlights();
-                void audioContextRef.current?.suspend();
+                if (!isDetectionEnabled) void audioContextRef.current?.suspend();
               }}
               disabled={totalTicks === 0}
               className="p-3 bg-neutral-800 hover:bg-neutral-750 disabled:bg-neutral-850 text-neutral-300 disabled:text-neutral-700 rounded-xl border border-neutral-750 disabled:border-transparent transition-all active:scale-95"
@@ -1462,15 +1587,21 @@ function PracticePageContent() {
                 Practice feedback
               </span>
               <span className="text-[8px] uppercase font-bold tracking-wider text-neutral-600">
-                Preview
+                {isDetectionEnabled ? "Live" : "Awaiting microphone"}
               </span>
             </div>
 
             <div className="grid grid-cols-3 gap-2 mb-2">
               {[
-                ["Tonality", "92%"],
-                ["Timing precision", "88%"],
-                ["Accuracy", "90%"],
+                ["Tonality", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.noteAccuracy * 100)}%`
+                  : "—"],
+                ["Timing precision", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.timingPrecision * 100)}%`
+                  : "—"],
+                ["Accuracy", performanceMetrics.scoredEvents > 0
+                  ? `${Math.round(performanceMetrics.overallAccuracy * 100)}%`
+                  : "—"],
               ].map(([label, value]) => (
                 <div
                   key={label}
@@ -1487,20 +1618,76 @@ function PracticePageContent() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-neutral-800 bg-neutral-950/30 px-2 py-1.5">
+              {(isDetectionEnabled || detectionError) && (
+                <div className="mb-2 rounded-md border border-emerald-900/60 bg-emerald-950/15 p-2 font-mono text-[9px] text-neutral-300">
+                  <div className="mb-1 font-sans font-bold uppercase tracking-widest text-emerald-400">
+                    Score-guided microphone debug
+                  </div>
+                  {detectionError ? (
+                    <div className="text-rose-400">{detectionError}</div>
+                  ) : (() => {
+                    const result = detectionSnapshot?.results.at(-1);
+                    if (!result) return <div className="text-neutral-500">Waiting for the next score event…</div>;
+                    return (
+                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                        <span>Expected</span>
+                        <span>{result.expectedNotes.map(note => midiLabel(note.midi)).join(" ") || "rest"}</span>
+                        <span>Confidence</span>
+                        <span>{result.expectedNotes.map(note => `${midiLabel(note.midi)} ${note.confidence.toFixed(2)}`).join(" · ")}</span>
+                        <span>Timing</span>
+                        <span>{result.timing.errorMs === undefined ? "—" : `${result.timing.errorMs >= 0 ? "+" : ""}${Math.round(result.timing.errorMs)} ms`}</span>
+                        <span>Noise / RMS</span>
+                        <span>{detectionSnapshot?.noiseFloor.toExponential(2)} / {detectionSnapshot?.rms.toFixed(4)}</span>
+                        <span>Result</span>
+                        <span className="font-bold uppercase text-emerald-300">{result.status}</span>
+                        {result.unexpectedNotes.length > 0 && (
+                          <>
+                            <span>Unexpected</span>
+                            <span className="text-amber-300">{result.unexpectedNotes.map(note => midiLabel(note.midi)).join(" ")}</span>
+                          </>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
               <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-neutral-600">
-                Recommendations
+                {isDetectionEnabled ? "Recent performance" : "Performance feedback"}
               </div>
-              <ul className="space-y-1.5">
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Repeat the ascending passage in measures 9–10 at a lower tempo, increasing it as accuracy develops.
-                </li>
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Practice moving from C♯ minor to G major and back until the transition feels even.
-                </li>
-                <li className="rounded-md bg-neutral-900/80 px-2 py-1.5 text-[10px] leading-relaxed text-neutral-300">
-                  Isolate the off-beat entrances in measures 13–14 and practice them with the metronome.
-                </li>
-              </ul>
+              {isDetectionEnabled ? (
+                recentPerformanceResults.length > 0 ? (
+                  <ul className="space-y-1">
+                    {recentPerformanceResults.map(result => (
+                      <li
+                        key={result.eventId}
+                        className="flex items-center justify-between gap-3 rounded-md bg-neutral-900/80 px-2 py-1 text-[9px] text-neutral-300"
+                      >
+                        <span className="truncate font-mono">
+                          {result.expectedNotes.map(note => midiLabel(note.midi)).join("+")}
+                          {result.expectedNotes.some(note => !note.detected) && " · missing "}
+                          {result.expectedNotes.filter(note => !note.detected).map(note => midiLabel(note.midi)).join("+")}
+                          {result.unexpectedNotes.length > 0 && ` · unexpected ${result.unexpectedNotes.map(note => midiLabel(note.midi)).join("+")}`}
+                        </span>
+                        <span className={`shrink-0 font-bold uppercase ${
+                          result.status === "correct" ? "text-emerald-400" :
+                            result.status === "early" || result.status === "late" ? "text-amber-300" :
+                              "text-rose-400"
+                        }`}>
+                          {result.status}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="rounded-md bg-neutral-900/60 px-2 py-2 text-[10px] text-neutral-500">
+                    Start playback and play the expected notes to build performance feedback.
+                  </div>
+                )
+              ) : (
+                <div className="rounded-md bg-neutral-900/60 px-2 py-2 text-[10px] text-neutral-500">
+                  Enable Mic detect to measure note accuracy, timing precision, and unwanted notes.
+                </div>
+              )}
             </div>
           </div>
         </div>

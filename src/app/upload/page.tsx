@@ -457,7 +457,7 @@ export default function UploadPage() {
 
     if (user && token) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/scores/${scoreId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/${user.id}/scores/${scoreId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",
@@ -483,7 +483,7 @@ export default function UploadPage() {
   const handleDeleteScore = async (scoreId: number) => {
     if (user && token) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/scores/${scoreId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/users/${user.id}/scores/${scoreId}`, {
           method: "DELETE",
           headers: {
             "Content-Type": "application/json",
@@ -534,7 +534,7 @@ export default function UploadPage() {
   const handleMoveScore = async (scoreId: number, targetFolderId: number | null) => {
     if (user && token) {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/scores/${scoreId}`, {
+        const res = await fetch(`${API_BASE_URL}/api/users/${user.id}/scores/${scoreId}`, {
           method: "PATCH",
           headers: {
             "Content-Type": "application/json",

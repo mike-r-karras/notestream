@@ -11,20 +11,112 @@ import type {
 import {
   eventDurationQuarter,
   eventStartQuarter,
-  getMeasureQuarterNotes,
-  getOpeningPickupOffsetQuarterNotes,
-  readBeatType,
+  getContextualMeasureQuarterNotes,
 } from './scoreModel';
 import { getMeasureWidth } from './layout';
 
 export const TICKS_PER_QUARTER = 480;
+
+type NotationPart = {
+  id?: string;
+  measures?: StandardNotationMeasure[];
+};
+
+function partStaffCount(measures: StandardNotationMeasure[]): number {
+  let count = 1;
+  for (const measure of measures) {
+    count = Math.max(count, measure.attributes?.staves ?? 1);
+    for (const staff of Object.keys(measure.attributes?.clefs ?? {})) {
+      count = Math.max(count, Number(staff) || 1);
+    }
+    for (const voice of measure.voices ?? []) {
+      count = Math.max(count, voice.staff ?? 1);
+      for (const event of voice.events ?? []) {
+        count = Math.max(count, event.staff ?? voice.staff ?? 1);
+      }
+    }
+  }
+  return count;
+}
+
+function mergeNotationParts(parts: NotationPart[]): StandardNotationMeasure[] {
+  const notationParts = parts
+    .map(part => ({ ...part, measures: part.measures ?? [] }))
+    .filter(part => part.measures.length > 0);
+  if (notationParts.length === 0) return [];
+  if (notationParts.length === 1) return notationParts[0].measures;
+
+  let nextStaff = 1;
+  const positionedParts = notationParts.map((part, partIndex) => {
+    const staffCount = partStaffCount(part.measures);
+    const staffOffset = nextStaff - 1;
+    const staffGroup = Array.from(
+      { length: staffCount },
+      (_, index) => nextStaff + index
+    );
+    nextStaff += staffCount;
+    return { ...part, partIndex, staffOffset, staffGroup };
+  });
+  const measureCount = Math.max(...positionedParts.map(part => part.measures.length));
+
+  return Array.from({ length: measureCount }, (_, measureIndex) => {
+    const available = positionedParts.flatMap(part => {
+      const measure = part.measures[measureIndex];
+      return measure ? [{ part, measure }] : [];
+    });
+    const primary = available[0]?.measure;
+    if (!primary) return { id: `multi-part-measure-${measureIndex + 1}` };
+
+    const clefs: NonNullable<StandardNotationMeasure['attributes']>['clefs'] = {};
+    const voices: StandardNotationVoice[] = [];
+    for (const { part, measure } of available) {
+      const sourceClefs = measure.attributes?.clefs ?? {};
+      Object.entries(sourceClefs).forEach(([staff, clef]) => {
+        clefs[String(part.staffOffset + (Number(staff) || 1))] = { ...clef };
+      });
+      if (Object.keys(sourceClefs).length === 0 && measure.attributes?.clef) {
+        clefs[String(part.staffOffset + 1)] = { ...measure.attributes.clef };
+      }
+
+      (measure.voices ?? []).forEach((voice, voiceIndex) => {
+        const sourceStaff = voice.staff ?? 1;
+        voices.push({
+          ...voice,
+          id: voice.id ?? `${part.id ?? `part-${part.partIndex + 1}`}-m${measureIndex + 1}-v${voiceIndex + 1}`,
+          staff: part.staffOffset + sourceStaff,
+          events: (voice.events ?? []).map(event => ({
+            ...event,
+            staff: part.staffOffset + (event.staff ?? sourceStaff),
+          })),
+        });
+      });
+    }
+
+    return {
+      ...primary,
+      id: primary.id ?? `multi-part-measure-${measureIndex + 1}`,
+      attributes: {
+        ...primary.attributes,
+        staves: nextStaff - 1,
+        clef: clefs['1'] ?? primary.attributes?.clef,
+        clefs,
+      },
+      voices,
+      staffGroups: positionedParts.map(part => part.staffGroup),
+    };
+  });
+}
 
 export function notationEventId(
   measureId: string,
   voice: StandardNotationVoice,
   event: StandardNotationEvent
 ): string {
-  if (event.id) return event.id;
+  // Converter event IDs are stable but are not guaranteed to be globally
+  // unique; some scores restart them in each measure. Scope them to their
+  // canonical measure so the transport and SVG registry identify the same
+  // single written occurrence.
+  if (event.id) return `${measureId}::${event.id}`;
   const staff = event.staff ?? voice.staff ?? 1;
   const voiceNumber = event.voice ?? voice.number ?? 1;
   const start = eventStartQuarter(event).toFixed(6);
@@ -38,11 +130,7 @@ export function notationEventId(
 export function getNotationMeasures(
   document: EasyScoreDocument
 ): StandardNotationMeasure[] {
-  return (
-    (document.parts?.[0] as unknown as {
-      measures?: StandardNotationMeasure[];
-    })?.measures ?? []
-  );
+  return mergeNotationParts((document.parts ?? []) as unknown as NotationPart[]);
 }
 
 export function buildNotationTimeline(
@@ -51,10 +139,8 @@ export function buildNotationTimeline(
   const measures = getNotationMeasures(document);
   const segments: PracticeSegment[] = [];
   let startTick = 0;
-  const metadataTime = document.metadata?.timeSignature;
-
   measures.forEach((measure, index) => {
-    const quarterNotes = getMeasureQuarterNotes(measure);
+    const quarterNotes = getContextualMeasureQuarterNotes(measures, index);
     const durationTicks = Math.max(
       1,
       Math.round(quarterNotes * TICKS_PER_QUARTER)
@@ -62,15 +148,6 @@ export function buildNotationTimeline(
     const number = measure.number ?? index + 1;
     const measureId =
       measure.id ?? `notation-measure-${number}`;
-    const pickupOffsetQuarterNotes = index === 0
-      ? getOpeningPickupOffsetQuarterNotes(
-          measure,
-          measure.attributes?.time?.beats ?? metadataTime?.[0] ?? 4,
-          measure.attributes?.time
-            ? readBeatType(measure.attributes.time)
-            : metadataTime?.[1] ?? 4
-        )
-      : 0;
 
     const events: PracticeEvent[] = [{
       id: `${measureId}-event`,
@@ -89,7 +166,7 @@ export function buildNotationTimeline(
           startTick:
             startTick +
             Math.round(
-              (eventStartQuarter(event) + pickupOffsetQuarterNotes) *
+              eventStartQuarter(event) *
                 TICKS_PER_QUARTER
             ),
           durationTicks: Math.max(
@@ -109,7 +186,7 @@ export function buildNotationTimeline(
       id: measureId,
       startTick,
       durationTicks,
-      preferredWidth: getMeasureWidth(measure, index),
+      preferredWidth: getMeasureWidth(measure, index, quarterNotes),
       events,
       payload: measure,
     });

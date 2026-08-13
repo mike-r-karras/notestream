@@ -141,6 +141,42 @@ export function getMeasureQuarterNotes(measure: StandardNotationMeasure): number
   return Math.max(declared, eventEnd, 1);
 }
 
+function hasPickupBoundaryBefore(
+  measures: StandardNotationMeasure[],
+  measureIndex: number
+): boolean {
+  if (measureIndex === 0) return true;
+  const currentBarlines = measures[measureIndex]?.barlines ?? [];
+  const previousBarlines = measures[measureIndex - 1]?.barlines ?? [];
+  const isDouble = (style: string | undefined) =>
+    style === 'light-light' || style === 'double';
+
+  return previousBarlines.some(barline =>
+    isDouble(barline.style) || !!barline.repeat
+  ) || currentBarlines.some(barline =>
+    barline.location === 'left' &&
+    (isDouble(barline.style) || !!barline.repeat)
+  );
+}
+
+/**
+ * Return the written duration used by transport and horizontal layout.
+ * Underfull measures are partial measures only at structurally valid pickup
+ * boundaries: the opening, a double barline, or a repeat boundary.
+ */
+export function getContextualMeasureQuarterNotes(
+  measures: StandardNotationMeasure[],
+  measureIndex: number
+): number {
+  const measure = measures[measureIndex];
+  if (!measure) return 1;
+  const declared = getMeasureQuarterNotes(measure);
+  const eventEnd = getMeasureEventEndQuarterNotes(measure);
+  return hasPickupBoundaryBefore(measures, measureIndex) && eventEnd > 0 && eventEnd < declared
+    ? eventEnd
+    : declared;
+}
+
 export function getStaffNumbers(
   measures: StandardNotationMeasure[]
 ): number[] {

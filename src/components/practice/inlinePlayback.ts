@@ -66,12 +66,12 @@ export function buildInlinePlaybackDocument(
     };
   });
 
-  const parts = [...(document.parts ?? [])];
-  if (parts.length === 0) return document;
-  parts[0] = {
-    ...parts[0],
+  const sourcePart = document.parts?.[0];
+  if (!sourcePart) return document;
+  const parts = [{
+    ...sourcePart,
     measures: virtualMeasures,
-  } as typeof parts[number];
+  }] as unknown as typeof document.parts;
 
   return { ...document, parts };
 }

@@ -84,7 +84,7 @@ describe('writtenMeasureNotation', () => {
   it('maps the supplied Fur Elise first and second endings', () => {
     const fixture = JSON.parse(
       readFileSync(
-        new URL('../../../../fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
+        new URL('../../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
         'utf8'
       )
     ) as { parts: Array<{ measures: StandardNotationMeasure[] }> };

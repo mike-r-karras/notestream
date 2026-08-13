@@ -3,6 +3,7 @@ export type StandardNotationMeasure = {
   number?: number;
   attributes?: {
     divisions?: number;
+    staves?: number;
     time?: { beats?: number; beatType?: number; beat_type?: number } | null;
     key?: { fifths?: number; mode?: string | null } | null;
     clef?: { sign?: string; line?: number | null } | null;
@@ -22,6 +23,8 @@ export type StandardNotationMeasure = {
     sourceMeasureIndex: number;
     ghostRepeatSigns: boolean;
   };
+  /** Derived render-view grouping; canonical source measures remain immutable. */
+  staffGroups?: number[][];
 };
 
 export type StandardNotationBarline = {
@@ -60,6 +63,13 @@ export type StandardNotationEvent = {
     slurs?: Array<{ number?: number; type?: string }>;
   }> | null;
   accidentals?: Array<string | null> | null;
+  lyrics?: Array<{
+    number?: string | number;
+    text?: string;
+    syllabic?: 'single' | 'begin' | 'middle' | 'end' | string;
+    placement?: 'above' | 'below' | string;
+    extend?: boolean | string | { type?: string } | null;
+  }>;
 };
 
 export type StandardNotationVoice =

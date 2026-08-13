@@ -43,7 +43,7 @@ function measure(
 }
 
 describe('resolvePlaybackSequence', () => {
-  it('excludes an opening pickup from an implicit repeat-to-start', () => {
+  it('includes an opening pickup in an implicit repeat-to-start', () => {
     const document = score([
       measure(0, { duration: 0.5 }),
       measure(1),
@@ -56,7 +56,7 @@ describe('resolvePlaybackSequence', () => {
 
     expect(
       resolvePlaybackSequence(document).measures.map(entry => entry.writtenMeasureNumber)
-    ).toEqual([0, 1, 2, 3, 1, 2, 3, 4]);
+    ).toEqual([0, 1, 2, 3, 0, 1, 2, 3, 4]);
   });
 
   it('uses an explicit forward repeat even when an opening pickup exists', () => {
@@ -111,7 +111,7 @@ describe('resolvePlaybackSequence', () => {
   it('matches the supplied Fur Elise pickup and ending sequence', () => {
     const fixture = JSON.parse(
       readFileSync(
-        new URL('../../../fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
+        new URL('../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
         'utf8'
       )
     ) as EasyScoreDocument;
@@ -123,10 +123,11 @@ describe('resolvePlaybackSequence', () => {
     expect(sequence).toEqual([
       0,
       ...written.filter(number => number >= 1 && number <= 8),
+      0,
       ...written.filter(number => number >= 1 && number <= 7),
       ...written.filter(number => number >= 9),
     ]);
-    expect(sequence.filter(number => number === 0)).toHaveLength(1);
+    expect(sequence.filter(number => number === 0)).toHaveLength(2);
     expect(sequence.filter(number => number === 1)).toHaveLength(2);
     expect(sequence.filter(number => number === 8)).toHaveLength(1);
     expect(sequence.filter(number => number === 9)).toHaveLength(1);
@@ -144,16 +145,16 @@ describe('resolvePlaybackSequence', () => {
     const sequence = resolvePlaybackSequence(document);
     const model = buildNotationPlaybackModel(document, sequence);
     const repeatedMeasure = model.measures.filter(item => item.number === 1);
-    const repeatedNote = model.notes.filter(note => note.id === 'P1-m1-event');
+    const repeatedNote = model.notes.filter(note => note.id === 'P1-m1::P1-m1-event');
 
-    expect(model.measures.map(item => item.number)).toEqual([0, 1, 2, 1, 2, 3]);
+    expect(model.measures.map(item => item.number)).toEqual([0, 1, 2, 0, 1, 2, 3]);
     expect(model.beats.filter(beat => beat.measure === 1 && beat.accent)).toHaveLength(2);
     expect(repeatedNote).toHaveLength(2);
     expect(activeNoteIdsAtTick(model.notes, repeatedMeasure[0].startTick)).toEqual(
-      new Set(['P1-m1-event'])
+      new Set(['P1-m1::P1-m1-event'])
     );
     expect(activeNoteIdsAtTick(model.notes, repeatedMeasure[1].startTick)).toEqual(
-      new Set(['P1-m1-event'])
+      new Set(['P1-m1::P1-m1-event'])
     );
   });
 });
