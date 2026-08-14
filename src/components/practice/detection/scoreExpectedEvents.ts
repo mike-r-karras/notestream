@@ -12,10 +12,13 @@ function sourceEventId(tone: PlaybackToneEvent): string {
 
 export function buildExpectedNoteEvents(
   model: NotationPlaybackModel,
-  bpm: number
+  bpm: number,
+  visibleStaffs?: readonly number[]
 ): ExpectedNoteEvent[] {
+  const visibleStaffSet = visibleStaffs ? new Set(visibleStaffs) : undefined;
   const groups = new Map<string, PlaybackToneEvent[]>();
   for (const tone of model.tones) {
+    if (visibleStaffSet && !visibleStaffSet.has(tone.staff)) continue;
     const key = `${tone.startTick}`;
     const group = groups.get(key);
     if (group) group.push(tone);

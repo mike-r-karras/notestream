@@ -347,6 +347,7 @@ export function ContinuousNotation({
               note.setStyle(elementStyle);
               note.setStemStyle(elementStyle);
               note.setFlagStyle(elementStyle);
+              note.setLedgerLineStyle(elementStyle);
               note.setStave(stave);
 
               if (!isRest) {

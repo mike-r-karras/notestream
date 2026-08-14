@@ -14,6 +14,7 @@ import {
   beatsCrossed,
   buildNotationPlaybackModel,
   elapsedMsToTick,
+  playbackTonesForStaffs,
   playbackPositionAtTick,
   tickToElapsedMs,
 } from "../../components/practice/playbackModel";
@@ -36,6 +37,11 @@ import {
 } from "../../components/practice/notation/renderedNoteRegistry";
 import { getNotationMeasures } from "../../components/practice/notation/timeline";
 import { getStaffNumbers } from "../../components/practice/notation/scoreModel";
+import {
+  toggleHiddenHand,
+  type PianoHand,
+} from "../../components/practice/handVisibility";
+import { NOTATION_LAYOUT } from "../../components/practice/notation/layout";
 
 export interface Folder {
   id: number;
@@ -105,12 +111,27 @@ export interface InstrumentConfig {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
+const SYNTH_MIC_WARNING_STORAGE_KEY = "notestream_hide_synth_mic_warning";
 
 type PracticeRepeatMode = "inline" | "scrollback";
 
 function midiLabel(midi: number): string {
   const names = ["C", "C♯", "D", "D♯", "E", "F", "F♯", "G", "G♯", "A", "A♯", "B"];
   return `${names[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
+
+function HandSilhouette({ hand }: { hand: PianoHand }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-5 w-5"
+      aria-hidden="true"
+      style={hand === "right" ? { transform: "scaleX(-1)" } : undefined}
+    >
+      <path d="M6.5 20.2c-1.1-1.5-1.7-3.2-1.7-5.1V9.8c0-.7.5-1.2 1.2-1.2s1.2.5 1.2 1.2v3.1h.6V5.7c0-.7.5-1.2 1.2-1.2s1.2.5 1.2 1.2v6.6h.6V3.8c0-.7.5-1.2 1.2-1.2s1.2.5 1.2 1.2v8.5h.6V5.1c0-.7.5-1.2 1.2-1.2s1.2.5 1.2 1.2v7.8l1.3-1.6c.5-.6 1.4-.7 2-.2.6.5.7 1.4.2 2l-2.6 3.5c-.5.7-.8 1.5-.9 2.4l-.1 2.4H7.4l-.9-1.2Z" />
+    </svg>
+  );
 }
 
 export default function PracticePage() {
@@ -162,6 +183,8 @@ function PracticePageContent() {
   const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
   const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
+  const [isSynthMicWarningOpen, setIsSynthMicWarningOpen] = useState(false);
+  const [dontShowSynthMicWarningAgain, setDontShowSynthMicWarningAgain] = useState(false);
   const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>(() => {
     if (typeof window === "undefined") return "scrollback";
     const savedRepeatMode = localStorage.getItem(PRACTICE_REPEAT_MODE_STORAGE_KEY);
@@ -178,6 +201,10 @@ function PracticePageContent() {
   const [detectionSnapshot, setDetectionSnapshot] = useState<PracticeAudioDebugSnapshot | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [performanceResults, setPerformanceResults] = useState<Map<string, PracticeDetectionResult>>(new Map());
+  const [handVisibility, setHandVisibility] = useState<{
+    scoreId: number | null;
+    hiddenHand: PianoHand | null;
+  }>({ scoreId: null, hiddenHand: null });
 
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
@@ -234,15 +261,30 @@ function PracticePageContent() {
   }, [repeatMode]);
 
   useEffect(() => {
-    if (!isPracticeSettingsOpen) return;
+    if (!isPracticeSettingsOpen && !isSynthMicWarningOpen) return;
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") setIsPracticeSettingsOpen(false);
+      if (event.key === "Escape") setIsSynthMicWarningOpen(false);
     };
 
     window.addEventListener("keydown", closeOnEscape);
     return () => window.removeEventListener("keydown", closeOnEscape);
-  }, [isPracticeSettingsOpen]);
+  }, [isPracticeSettingsOpen, isSynthMicWarningOpen]);
+
+  const showSynthMicWarning = useCallback(() => {
+    if (localStorage.getItem(SYNTH_MIC_WARNING_STORAGE_KEY) === "true") return;
+    setDontShowSynthMicWarningAgain(false);
+    setIsSynthMicWarningOpen(true);
+  }, []);
+
+  const dismissSynthMicWarning = useCallback(() => {
+    if (dontShowSynthMicWarningAgain) {
+      localStorage.setItem(SYNTH_MIC_WARNING_STORAGE_KEY, "true");
+    }
+    setIsSynthMicWarningOpen(false);
+    setDontShowSynthMicWarningAgain(false);
+  }, [dontShowSynthMicWarningAgain]);
 
   // Load Folder and Score Data (reusing logic from upload page)
   const fetchFoldersAndScores = useCallback(async () => {
@@ -406,12 +448,18 @@ function PracticePageContent() {
     return resolved;
   }, [displaySong]);
 
-  const notationStaffCount = useMemo(
+  const notationStaffNumbers = useMemo(
     () => displaySong
-      ? getStaffNumbers(getNotationMeasures(displaySong)).length
-      : 1,
+      ? getStaffNumbers(getNotationMeasures(displaySong))
+      : [1],
     [displaySong]
   );
+  const notationStaffCount = notationStaffNumbers.length;
+
+  const showsPianoHandControls = !!renderer?.renderContinuous && notationStaffCount === 2;
+  const hiddenHand = handVisibility.scoreId === (activeScore?.id ?? null)
+    ? handVisibility.hiddenHand
+    : null;
 
   // Build timeline segments and position them
   const positionedSegments = useMemo<PositionedSegment[]>(() => {
@@ -744,9 +792,21 @@ function PracticePageContent() {
   }, [getAudioContext]);
 
   const totalTicks = playbackModel.totalTicks;
+  const visibleDetectionStaffs = useMemo(
+    () => hiddenHand === null
+      ? notationStaffNumbers
+      : notationStaffNumbers.filter((_, index) =>
+          index !== (hiddenHand === "right" ? 0 : 1)
+        ),
+    [hiddenHand, notationStaffNumbers]
+  );
   const expectedDetectionEvents = useMemo(
-    () => buildExpectedNoteEvents(playbackModel, bpm),
-    [playbackModel, bpm]
+    () => buildExpectedNoteEvents(playbackModel, bpm, visibleDetectionStaffs),
+    [playbackModel, bpm, visibleDetectionStaffs]
+  );
+  const visiblePlaybackTones = useMemo(
+    () => playbackTonesForStaffs(playbackModel.tones, visibleDetectionStaffs),
+    [playbackModel.tones, visibleDetectionStaffs]
   );
   const detectionPlaybackModelRef = useRef(playbackModel);
   const detectionBpmRef = useRef(bpm);
@@ -863,7 +923,7 @@ function PracticePageContent() {
             masterGainRef.current ?? ctx.destination
           );
         }
-        playbackModel.tones.forEach(tone => {
+        visiblePlaybackTones.forEach(tone => {
           if (scheduledToneIdsRef.current.has(tone.id)) return;
           const toneEndTick = tone.startTick + tone.durationTicks;
           const startsInFrame =
@@ -957,7 +1017,7 @@ function PracticePageContent() {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks, visiblePlaybackTones]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
@@ -1217,15 +1277,59 @@ function PracticePageContent() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(99,102,241,0.02),rgba(255,255,255,0))]" />
 
         {/* Viewport Frame */}
-        <div className="flex-1 flex items-center justify-center min-h-0 px-6">
+        <div className="flex-1 flex items-center justify-center min-h-0 px-12">
           <div
-            ref={viewportRef}
-            className={`w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)] ${
+            className={`w-full relative ${
               notationStaffCount > 2
                 ? "h-[92%] max-h-[520px]"
                 : "h-[85%] max-h-[360px]"
             }`}
           >
+            {showsPianoHandControls && (
+              <div className="absolute left-full ml-2 inset-y-0 z-40 w-8" aria-label="Piano hand visibility">
+                {(["right", "left"] as const).map((hand, index) => {
+                  const isDisabled = hiddenHand !== null && hiddenHand !== hand;
+                  const isVisible = hiddenHand !== hand;
+                  const staffCenter = NOTATION_LAYOUT.top + 60 + index * NOTATION_LAYOUT.staffGap;
+                  return (
+                    <button
+                      key={hand}
+                      type="button"
+                      onClick={() => {
+                        pianoOutputRef.current?.allNotesOff();
+                        scheduledToneIdsRef.current.clear();
+                        includeStartingBeatRef.current = true;
+                        setHandVisibility(current => ({
+                          scoreId: activeScore?.id ?? null,
+                          hiddenHand: toggleHiddenHand(
+                            current.scoreId === (activeScore?.id ?? null)
+                              ? current.hiddenHand
+                              : null,
+                            hand
+                          ),
+                        }));
+                      }}
+                      disabled={isDisabled}
+                      aria-label={`${isVisible ? "Hide" : "Show"} ${hand} hand score`}
+                      aria-pressed={isVisible}
+                      title={`${isVisible ? "Hide" : "Show"} ${hand} hand score`}
+                      className={`absolute left-0 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-md border bg-neutral-900/90 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                        isDisabled
+                          ? "cursor-not-allowed border-neutral-600 text-neutral-600"
+                          : "border-white text-white hover:bg-neutral-800"
+                      }`}
+                      style={{ top: staffCenter }}
+                    >
+                      <HandSilhouette hand={hand} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <div
+              ref={viewportRef}
+              className="h-full w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)]"
+            >
             {activeScore && flattenedMeasures.length > 0 ? (
               <>
                 {renderer?.renderContinuous && displaySong ? (
@@ -1263,6 +1367,21 @@ function PracticePageContent() {
                       parsedInst,
                       onRenderedNotes: handleRenderedNotes,
                     })}
+                    {hiddenHand && (
+                      <div
+                        className="absolute inset-x-0 z-30 bg-neutral-950 pointer-events-none"
+                        aria-hidden="true"
+                        style={hiddenHand === "right"
+                          ? {
+                              top: 0,
+                              height: NOTATION_LAYOUT.top + 40 + NOTATION_LAYOUT.staffGap / 2,
+                            }
+                          : {
+                              top: NOTATION_LAYOUT.top + 40 + NOTATION_LAYOUT.staffGap / 2,
+                              bottom: 0,
+                            }}
+                      />
+                    )}
                   </div>
                 ) : (
                   <>
@@ -1330,6 +1449,7 @@ function PracticePageContent() {
                 </button>
               </div>
             )}
+            </div>
           </div>
         </div>
       </div>
@@ -1350,8 +1470,18 @@ function PracticePageContent() {
                 onClick={() => {
                   setDetectionSnapshot(null);
                   setDetectionError(null);
-                  if (!isDetectionEnabled) setPerformanceResults(new Map());
-                  setIsDetectionEnabled(enabled => !enabled);
+                  if (isDetectionEnabled) {
+                    setIsDetectionEnabled(false);
+                    return;
+                  }
+                  setPerformanceResults(new Map());
+                  if (playbackMode === "tonal") {
+                    pianoOutputRef.current?.allNotesOff();
+                    scheduledToneIdsRef.current.clear();
+                    setPlaybackMode("highlight");
+                    showSynthMicWarning();
+                  }
+                  setIsDetectionEnabled(true);
                 }}
                 disabled={expectedDetectionEvents.length === 0}
                 className={`rounded-md px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide transition-colors disabled:opacity-40 ${
@@ -1391,7 +1521,7 @@ function PracticePageContent() {
             {([
               ["highlight", "Highlight"],
               ["metronome", "Metronome"],
-              ["tonal", "Tonal"],
+              ["tonal", "Synth"],
             ] as const).map(([mode, label]) => (
               <button
                 key={mode}
@@ -1400,6 +1530,10 @@ function PracticePageContent() {
                   pianoOutputRef.current?.allNotesOff();
                   scheduledToneIdsRef.current.clear();
                   setIsFlashing(false);
+                  if (mode === "tonal" && isDetectionEnabled) {
+                    setIsDetectionEnabled(false);
+                    showSynthMicWarning();
+                  }
                   setPlaybackMode(mode);
                   if (isPlaying && mode !== "highlight") {
                     const ctx = getAudioContext();
@@ -1797,6 +1931,45 @@ function PracticePageContent() {
             <p className="mt-4 rounded-lg border border-indigo-500/15 bg-indigo-950/20 px-3 py-2 text-[10px] leading-relaxed text-indigo-200/65">
               Both modes follow the same resolved repeat sequence; only their presentation differs.
             </p>
+          </section>
+        </div>
+      )}
+
+      {isSynthMicWarningOpen && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="synth-mic-warning-title"
+            aria-describedby="synth-mic-warning-description"
+            className="w-full max-w-sm rounded-2xl border border-neutral-700 bg-neutral-900 p-5 shadow-2xl shadow-black/60"
+          >
+            <h2 id="synth-mic-warning-title" className="text-sm font-black uppercase tracking-wider text-neutral-100">
+              Synth and Mic cannot run together
+            </h2>
+            <p id="synth-mic-warning-description" className="mt-2 text-xs leading-relaxed text-neutral-400">
+              Synth playback during a listening event can be picked up by the microphone and interfere with the app&apos;s ability to evaluate your performance. The previous option has been turned off.
+            </p>
+
+            <label className="mt-4 flex cursor-pointer items-center gap-2 text-xs text-neutral-300">
+              <input
+                type="checkbox"
+                checked={dontShowSynthMicWarningAgain}
+                onChange={event => setDontShowSynthMicWarningAgain(event.target.checked)}
+                className="h-4 w-4 rounded accent-indigo-500"
+              />
+              Don&apos;t show me this again
+            </label>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={dismissSynthMicWarning}
+                className="rounded-lg bg-indigo-600 px-4 py-2 text-xs font-extrabold uppercase tracking-wide text-white transition-colors hover:bg-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400"
+              >
+                Okay
+              </button>
+            </div>
           </section>
         </div>
       )}

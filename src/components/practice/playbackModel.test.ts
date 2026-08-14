@@ -4,6 +4,7 @@ import {
   activeNoteIdsAtTick,
   beatsCrossed,
   buildNotationPlaybackModel,
+  playbackTonesForStaffs,
   elapsedMsToTick,
   tickToElapsedMs,
 } from './playbackModel';
@@ -233,6 +234,7 @@ describe('buildNotationPlaybackModel', () => {
       midiNote: 66,
       startTick: 0,
       durationTicks: 960,
+      staff: 1,
     }]);
   });
 
@@ -288,5 +290,17 @@ describe('transport projections', () => {
   it('returns every beat crossed by a delayed animation frame', () => {
     expect(beatsCrossed(model, 100, 1100).map(beat => beat.tick)).toEqual([480, 960]);
     expect(beatsCrossed(model, 0, 10, true).map(beat => beat.tick)).toEqual([0]);
+  });
+});
+
+describe('playbackTonesForStaffs', () => {
+  it('returns synth tones only for visible staffs', () => {
+    const tones = [
+      { id: 'right', midiNote: 72, startTick: 0, durationTicks: 480, staff: 1 },
+      { id: 'left', midiNote: 48, startTick: 0, durationTicks: 480, staff: 2 },
+    ];
+
+    expect(playbackTonesForStaffs(tones, [2]).map(tone => tone.id)).toEqual(['left']);
+    expect(playbackTonesForStaffs(tones, [1, 2])).toEqual(tones);
   });
 });

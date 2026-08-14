@@ -26,6 +26,7 @@ export type PlaybackToneEvent = {
   midiNote: number;
   startTick: number;
   durationTicks: number;
+  staff: number;
 };
 
 export type PlaybackBeatEvent = {
@@ -223,6 +224,7 @@ export function buildNotationPlaybackModel(
               midiNote,
               startTick: eventStartTick,
               durationTicks: eventDurationTicks,
+              staff,
             };
             tones.push(tone);
           }
@@ -255,6 +257,14 @@ export function activeNoteIdsAtTick(
       )
       .map(note => note.id)
   );
+}
+
+export function playbackTonesForStaffs(
+  tones: PlaybackToneEvent[],
+  visibleStaffs: readonly number[]
+): PlaybackToneEvent[] {
+  const visibleStaffSet = new Set(visibleStaffs);
+  return tones.filter(tone => visibleStaffSet.has(tone.staff));
 }
 
 export function playbackPositionAtTick(
