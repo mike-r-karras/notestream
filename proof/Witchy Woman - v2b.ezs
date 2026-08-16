@@ -1,0 +1,5068 @@
+{
+  "schemaVersion": "chord-chart-1.0",
+  "sourceFormat": "pdf-chord-chart",
+  "metadata": {
+    "title": "Untitled chord chart",
+    "sheetType": "chord-lyrics",
+    "timeSignature": [
+      4,
+      4
+    ],
+    "sourceFilename": "Witchy Woman - v2b.pdf",
+    "instrument": "ukulele",
+    "instrumentInference": {
+      "confidence": 0.97,
+      "evidence": [
+        "Text explicitly mentions \"Ukulele\""
+      ]
+    }
+  },
+  "sections": [
+    {
+      "id": "intro",
+      "label": "Intro",
+      "measures": [
+        {
+          "id": "m1",
+          "number": 1,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m1-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w15"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w15",
+              "p1-w17",
+              "p1-w18",
+              "p1-w19"
+            ]
+          }
+        },
+        {
+          "id": "m2",
+          "number": 2,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m2-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w21"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w21",
+              "p1-w23",
+              "p1-w24",
+              "p1-w25"
+            ]
+          }
+        },
+        {
+          "id": "m3",
+          "number": 3,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w27",
+              "p1-w28",
+              "p1-w29",
+              "p1-w30"
+            ]
+          }
+        },
+        {
+          "id": "m4",
+          "number": 4,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [
+            {
+              "id": "m4-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w32"
+                ]
+              }
+            },
+            {
+              "id": "m4-c2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w34"
+                ]
+              }
+            },
+            {
+              "id": "m4-c3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w36"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w32",
+              "p1-w34",
+              "p1-w36",
+              "p1-w38"
+            ]
+          }
+        },
+        {
+          "id": "m5",
+          "number": 5,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w40",
+              "p1-w41",
+              "p1-w42",
+              "p1-w43"
+            ]
+          }
+        },
+        {
+          "id": "m6",
+          "number": 6,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m6-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w45"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w45",
+              "p1-w47",
+              "p1-w48",
+              "p1-w49"
+            ]
+          }
+        },
+        {
+          "id": "m7",
+          "number": 7,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w51",
+              "p1-w52",
+              "p1-w53",
+              "p1-w54"
+            ]
+          }
+        },
+        {
+          "id": "m8",
+          "number": 8,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m8-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w73"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w73",
+              "p1-w75",
+              "p1-w76",
+              "p1-w77"
+            ]
+          }
+        },
+        {
+          "id": "m9",
+          "number": 9,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w79",
+              "p1-w80",
+              "p1-w81",
+              "p1-w82"
+            ]
+          }
+        },
+        {
+          "id": "m10",
+          "number": 10,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w84",
+              "p1-w85",
+              "p1-w86",
+              "p1-w87"
+            ]
+          }
+        },
+        {
+          "id": "m11",
+          "number": 11,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w89",
+              "p1-w90",
+              "p1-w91",
+              "p1-w92"
+            ]
+          }
+        },
+        {
+          "id": "m12",
+          "number": 12,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m12-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w101"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m12-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Raven---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w119"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m12-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hair---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w120"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m12-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "and",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w121"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w101",
+              "p1-w102",
+              "p1-w103",
+              "p1-w104"
+            ]
+          }
+        },
+        {
+          "id": "m13",
+          "number": 13,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m13-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w105"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m13-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "ruby---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w122"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m13-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "lips,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w123"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w105",
+              "p1-w106",
+              "p1-w107",
+              "p1-w108"
+            ]
+          }
+        },
+        {
+          "id": "m14",
+          "number": 14,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m14-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "sparks",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w124"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m14-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "fly",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w125"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m14-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "from",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w126"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m14-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "her fin--- ger tips",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w127",
+                  "p1-w128",
+                  "p1-w129",
+                  "p1-w130"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w110",
+              "p1-w111",
+              "p1-w112",
+              "p1-w113"
+            ]
+          }
+        },
+        {
+          "id": "m15",
+          "number": 15,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m15-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w131"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m15-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Echo--",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w149"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m15-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "ed",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w150"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m15-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "voices",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w151"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w131",
+              "p1-w132",
+              "p1-w133",
+              "p1-w134"
+            ]
+          }
+        },
+        {
+          "id": "m16",
+          "number": 16,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m16-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w135"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m16-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "i-in",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w152"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m16-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w153"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m16-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "night,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w154"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m16-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "she’s a",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w155",
+                  "p1-w156"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w135",
+              "p1-w136",
+              "p1-w137",
+              "p1-w138"
+            ]
+          }
+        },
+        {
+          "id": "m17",
+          "number": 17,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m17-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "rest-less",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w157"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m17-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "spirit",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w158"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m17-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "on an end-less flight",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w159",
+                  "p1-w160",
+                  "p1-w161",
+                  "p1-w162"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w140",
+              "p1-w141",
+              "p1-w142",
+              "p1-w143"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chorus",
+      "label": "Chorus",
+      "measures": [
+        {
+          "id": "m18",
+          "number": 18,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m18-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w164"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m18-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w182"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m18-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo----",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w183"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w164",
+              "p1-w165",
+              "p1-w166",
+              "p1-w167"
+            ]
+          }
+        },
+        {
+          "id": "m19",
+          "number": 19,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m19-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w168"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m19-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w184"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m19-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "wo--- man",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w185",
+                  "p1-w186"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w168",
+              "p1-w169",
+              "p1-w170",
+              "p1-w171"
+            ]
+          }
+        },
+        {
+          "id": "m20",
+          "number": 20,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m20-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "see how---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w187",
+                  "p1-w188"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m20-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "high",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w189"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m20-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "she fli---- i------ ies",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w190",
+                  "p1-w191",
+                  "p1-w192",
+                  "p1-w193"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w173",
+              "p1-w174",
+              "p1-w175",
+              "p1-w176"
+            ]
+          }
+        },
+        {
+          "id": "m21",
+          "number": 21,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m21-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w194"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m21-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w213"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m21-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo----",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w214"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w194",
+              "p1-w195",
+              "p1-w196",
+              "p1-w197"
+            ]
+          }
+        },
+        {
+          "id": "m22",
+          "number": 22,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m22-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w198"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m22-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w215"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m22-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "wo---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w216"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m22-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "man",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w217"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w198",
+              "p1-w199",
+              "p1-w200",
+              "p1-w201"
+            ]
+          }
+        },
+        {
+          "id": "m23",
+          "number": 23,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m23-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "she got",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w218",
+                  "p1-w219"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m23-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w220"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m23-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "moon in",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w221",
+                  "p1-w222"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m23-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "her ey--- y---- y---- eyes---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w223",
+                  "p1-w224",
+                  "p1-w225",
+                  "p1-w226",
+                  "p1-w227"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w203",
+              "p1-w204",
+              "p1-w205",
+              "p1-w206"
+            ]
+          }
+        },
+        {
+          "id": "m24",
+          "number": 24,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m24-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w229"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m24-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "A----------------------------------------------------------------------------------------------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w247"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w229",
+              "p1-w230",
+              "p1-w231",
+              "p1-w232"
+            ]
+          }
+        },
+        {
+          "id": "m25",
+          "number": 25,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m25-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w233"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w233",
+              "p1-w234",
+              "p1-w235",
+              "p1-w236"
+            ]
+          }
+        },
+        {
+          "id": "m26",
+          "number": 26,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w238",
+              "p1-w239",
+              "p1-w240",
+              "p1-w241"
+            ]
+          }
+        },
+        {
+          "id": "m27",
+          "number": 27,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m27-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w252"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m27-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "held",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w271"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m27-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "me",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w272"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m27-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "spell-bound",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w273"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w252",
+              "p1-w253",
+              "p1-w254",
+              "p1-w255"
+            ]
+          }
+        },
+        {
+          "id": "m28",
+          "number": 28,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m28-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w256"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m28-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "in",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w274"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m28-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w275"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m28-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "night,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w276"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w256",
+              "p1-w257",
+              "p1-w258",
+              "p1-w259"
+            ]
+          }
+        },
+        {
+          "id": "m29",
+          "number": 29,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m29-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "dan-cing",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w277"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m29-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "shadows",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w278"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m29-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "in the fi--- re light",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w279",
+                  "p1-w280",
+                  "p1-w281",
+                  "p1-w282",
+                  "p1-w283"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w261",
+              "p1-w262",
+              "p1-w263",
+              "p1-w264"
+            ]
+          }
+        },
+        {
+          "id": "m30",
+          "number": 30,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m30-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w285"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m30-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Crazy-y",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w291"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m30-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "laughter",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w292"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m30-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "in an-other",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w293",
+                  "p1-w294"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w285",
+              "p1-w286",
+              "p1-w287",
+              "p1-w288"
+            ]
+          }
+        },
+        {
+          "id": "m31",
+          "number": 31,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m31-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w289"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m31-l1",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "room,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w307"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m31-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "and she",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w308",
+                  "p1-w309"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w289",
+              "p1-w290",
+              "p1-w295",
+              "p1-w296"
+            ]
+          }
+        },
+        {
+          "id": "m32",
+          "number": 32,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m32-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "drove her-self to",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w310",
+                  "p1-w311",
+                  "p1-w312"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m32-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "madness",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w313"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m32-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "with a sil-ver spoon",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w314",
+                  "p1-w315",
+                  "p1-w316",
+                  "p1-w317"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w298",
+              "p1-w299",
+              "p1-w300",
+              "p1-w301"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chorus-2",
+      "label": "Chorus",
+      "measures": [
+        {
+          "id": "m33",
+          "number": 33,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m33-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w320"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m33-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w338"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m33-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo----",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w339"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w320",
+              "p1-w321",
+              "p1-w322",
+              "p1-w323"
+            ]
+          }
+        },
+        {
+          "id": "m34",
+          "number": 34,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m34-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w324"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m34-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w340"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m34-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "wo--- man",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w341",
+                  "p1-w342"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w324",
+              "p1-w325",
+              "p1-w326",
+              "p1-w327"
+            ]
+          }
+        },
+        {
+          "id": "m35",
+          "number": 35,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m35-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "see how---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w343",
+                  "p1-w344"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m35-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "high",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w345"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m35-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "she fli---- i------ ies",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w346",
+                  "p1-w347",
+                  "p1-w348",
+                  "p1-w349"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w329",
+              "p1-w330",
+              "p1-w331",
+              "p1-w332"
+            ]
+          }
+        },
+        {
+          "id": "m36",
+          "number": 36,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m36-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w350"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m36-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w369"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m36-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo----",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w370"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w350",
+              "p1-w351",
+              "p1-w352",
+              "p1-w353"
+            ]
+          }
+        },
+        {
+          "id": "m37",
+          "number": 37,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m37-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w354"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m37-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w371"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m37-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "wo---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w372"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m37-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "man",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w373"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w354",
+              "p1-w355",
+              "p1-w356",
+              "p1-w357"
+            ]
+          }
+        },
+        {
+          "id": "m38",
+          "number": 38,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m38-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "she got",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w374",
+                  "p1-w375"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m38-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w376"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m38-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "moon in",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w377",
+                  "p1-w378"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m38-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "her ey--- y---- y---- eyes---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 1,
+                "wordIds": [
+                  "p1-w379",
+                  "p1-w380",
+                  "p1-w381",
+                  "p1-w382",
+                  "p1-w383"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 1,
+            "wordIds": [
+              "p1-w359",
+              "p1-w360",
+              "p1-w361",
+              "p1-w362"
+            ]
+          }
+        },
+        {
+          "id": "m39",
+          "number": 39,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m39-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w2"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m39-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "A-----------------------------------------------------------------------------------------------------------------------------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w55"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w2",
+              "p2-w4",
+              "p2-w5",
+              "p2-w6"
+            ]
+          }
+        },
+        {
+          "id": "m40",
+          "number": 40,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m40-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w8"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w8",
+              "p2-w10",
+              "p2-w11",
+              "p2-w12"
+            ]
+          }
+        },
+        {
+          "id": "m41",
+          "number": 41,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w14",
+              "p2-w15",
+              "p2-w16",
+              "p2-w17"
+            ]
+          }
+        },
+        {
+          "id": "m42",
+          "number": 42,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [
+            {
+              "id": "m42-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w19"
+                ]
+              }
+            },
+            {
+              "id": "m42-c2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w21"
+                ]
+              }
+            },
+            {
+              "id": "m42-c3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w23"
+                ]
+              }
+            },
+            {
+              "id": "m42-c4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w25"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w19",
+              "p2-w21",
+              "p2-w23",
+              "p2-w25"
+            ]
+          }
+        },
+        {
+          "id": "m43",
+          "number": 43,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m43-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w29"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w29",
+              "p2-w31",
+              "p2-w32",
+              "p2-w33"
+            ]
+          }
+        },
+        {
+          "id": "m44",
+          "number": 44,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m44-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w35"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w35",
+              "p2-w37",
+              "p2-w38",
+              "p2-w39"
+            ]
+          }
+        },
+        {
+          "id": "m45",
+          "number": 45,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w41",
+              "p2-w42",
+              "p2-w43",
+              "p2-w44"
+            ]
+          }
+        },
+        {
+          "id": "m46",
+          "number": 46,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [
+            {
+              "id": "m46-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w46"
+                ]
+              }
+            },
+            {
+              "id": "m46-c2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w49"
+                ]
+              }
+            },
+            {
+              "id": "m46-c3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w51"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w46",
+              "p2-w49",
+              "p2-w51",
+              "p2-w53"
+            ]
+          }
+        },
+        {
+          "id": "m47",
+          "number": 47,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m47-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w61"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m47-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaaah ah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w79",
+                  "p2-w80"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m47-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "ah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w81"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w61",
+              "p2-w62",
+              "p2-w63",
+              "p2-w64"
+            ]
+          }
+        },
+        {
+          "id": "m48",
+          "number": 48,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m48-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w65"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m48-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaaaaaah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w82"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w65",
+              "p2-w66",
+              "p2-w67",
+              "p2-w68"
+            ]
+          }
+        },
+        {
+          "id": "m49",
+          "number": 49,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m49-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaah,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w83"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m49-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "ah, ah, Ah, Ah, Aaaaaah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w84",
+                  "p2-w85",
+                  "p2-w86",
+                  "p2-w87",
+                  "p2-w88"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w70",
+              "p2-w71",
+              "p2-w72",
+              "p2-w73"
+            ]
+          }
+        },
+        {
+          "id": "m50",
+          "number": 50,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m50-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w89"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m50-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaaah ah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w107",
+                  "p2-w108"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m50-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "ah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w109"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w89",
+              "p2-w90",
+              "p2-w91",
+              "p2-w92"
+            ]
+          }
+        },
+        {
+          "id": "m51",
+          "number": 51,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m51-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w93"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m51-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaaaaaah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w110"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w93",
+              "p2-w94",
+              "p2-w95",
+              "p2-w96"
+            ]
+          }
+        },
+        {
+          "id": "m52",
+          "number": 52,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m52-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Aaaaaaah,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w111"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m52-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "ah, ah, Ah, Ah, Aaaaaah",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w112",
+                  "p2-w113",
+                  "p2-w114",
+                  "p2-w115",
+                  "p2-w116"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w98",
+              "p2-w99",
+              "p2-w100",
+              "p2-w101"
+            ]
+          }
+        },
+        {
+          "id": "m53",
+          "number": 53,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m53-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w118"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m53-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "A-----------------------------------------------------------------------------------------------------------------------------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w171"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w118",
+              "p2-w120",
+              "p2-w121",
+              "p2-w122"
+            ]
+          }
+        },
+        {
+          "id": "m54",
+          "number": 54,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m54-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w124"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w124",
+              "p2-w126",
+              "p2-w127",
+              "p2-w128"
+            ]
+          }
+        },
+        {
+          "id": "m55",
+          "number": 55,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w130",
+              "p2-w131",
+              "p2-w132",
+              "p2-w133"
+            ]
+          }
+        },
+        {
+          "id": "m56",
+          "number": 56,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [
+            {
+              "id": "m56-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w135"
+                ]
+              }
+            },
+            {
+              "id": "m56-c2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w137"
+                ]
+              }
+            },
+            {
+              "id": "m56-c3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w139"
+                ]
+              }
+            },
+            {
+              "id": "m56-c4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w141"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w135",
+              "p2-w137",
+              "p2-w139",
+              "p2-w141"
+            ]
+          }
+        },
+        {
+          "id": "m57",
+          "number": 57,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m57-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w145"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w145",
+              "p2-w147",
+              "p2-w148",
+              "p2-w149"
+            ]
+          }
+        },
+        {
+          "id": "m58",
+          "number": 58,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [
+            {
+              "id": "m58-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w151"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w151",
+              "p2-w153",
+              "p2-w154",
+              "p2-w155"
+            ]
+          }
+        },
+        {
+          "id": "m59",
+          "number": 59,
+          "beats": 4,
+          "effectiveChord": "D",
+          "chords": [],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w157",
+              "p2-w158",
+              "p2-w159",
+              "p2-w160"
+            ]
+          }
+        },
+        {
+          "id": "m60",
+          "number": 60,
+          "beats": 4,
+          "effectiveChord": "C",
+          "chords": [
+            {
+              "id": "m60-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w162"
+                ]
+              }
+            },
+            {
+              "id": "m60-c2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w165"
+                ]
+              }
+            },
+            {
+              "id": "m60-c3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w167"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w162",
+              "p2-w165",
+              "p2-w167",
+              "p2-w169"
+            ]
+          }
+        },
+        {
+          "id": "m61",
+          "number": 61,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m61-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w177"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m61-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "know you",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w186",
+                  "p2-w187"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m61-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "want to",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w188",
+                  "p2-w189"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m61-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "love her",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w190",
+                  "p2-w191"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m61-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "but",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w192"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w177",
+              "p2-w178",
+              "p2-w179",
+              "p2-w180"
+            ]
+          }
+        },
+        {
+          "id": "m62",
+          "number": 62,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m62-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "let me",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w193",
+                  "p2-w194"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m62-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "tell you",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w195",
+                  "p2-w196"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m62-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "brother",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w197"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m62-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "She’s been",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w206",
+                  "p2-w207"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w182",
+              "p2-w183",
+              "p2-w184",
+              "p2-w198"
+            ]
+          }
+        },
+        {
+          "id": "m63",
+          "number": 63,
+          "beats": 4,
+          "effectiveChord": "Cm",
+          "chords": [
+            {
+              "id": "m63-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Cm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w199"
+                ]
+              }
+            },
+            {
+              "id": "m63-c2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w201"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m63-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "sleepin’",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w208"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m63-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "in the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w209",
+                  "p2-w210"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m63-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "de-e-vil’s",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w211"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w199",
+              "p2-w200",
+              "p2-w201",
+              "p2-w202"
+            ]
+          }
+        },
+        {
+          "id": "m64",
+          "number": 64,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m64-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w203"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m64-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "bed",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w212"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m64-l2",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "There’s some",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w222",
+                  "p2-w223"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w203",
+              "p2-w204",
+              "p2-w205",
+              "p2-w213"
+            ]
+          }
+        },
+        {
+          "id": "m65",
+          "number": 65,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m65-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w214"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m65-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "rumors",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w224"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m65-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "goin’",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w225"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m65-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "round.",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w226"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w214",
+              "p2-w215",
+              "p2-w216",
+              "p2-w217"
+            ]
+          }
+        },
+        {
+          "id": "m66",
+          "number": 66,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m66-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Someone’s",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w227"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m66-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "under-ground",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w228"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m66-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "She can",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w239",
+                  "p2-w240"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w219",
+              "p2-w220",
+              "p2-w221",
+              "p2-w229"
+            ]
+          }
+        },
+        {
+          "id": "m67",
+          "number": 67,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m67-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w230"
+                ]
+              }
+            },
+            {
+              "id": "m67-c2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "C",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w232"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m67-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "rock you",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w241",
+                  "p2-w242"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m67-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "in the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w243",
+                  "p2-w244"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m67-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "night",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w245"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m67-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "till your",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w246",
+                  "p2-w247"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w230",
+              "p2-w231",
+              "p2-w232",
+              "p2-w233"
+            ]
+          }
+        },
+        {
+          "id": "m68",
+          "number": 68,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m68-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w234"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m68-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "skin turns",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w248",
+                  "p2-w249"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m68-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "red",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w250"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w234",
+              "p2-w235",
+              "p2-w236",
+              "p2-w237"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "chorus-3",
+      "label": "Chorus",
+      "measures": [
+        {
+          "id": "m69",
+          "number": 69,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m69-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w252"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m69-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w258"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m69-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w259"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w252",
+              "p2-w253",
+              "p2-w254",
+              "p2-w255"
+            ]
+          }
+        },
+        {
+          "id": "m70",
+          "number": 70,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m70-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w256"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m70-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w260"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m70-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "woman,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w289"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w256",
+              "p2-w257",
+              "p2-w277",
+              "p2-w278"
+            ]
+          }
+        },
+        {
+          "id": "m71",
+          "number": 71,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m71-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "see how---",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w290",
+                  "p2-w291"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m71-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "high",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w292"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m71-l3",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "she fli---- i------ ies",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w293",
+                  "p2-w294",
+                  "p2-w295",
+                  "p2-w296"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w280",
+              "p2-w281",
+              "p2-w282",
+              "p2-w283"
+            ]
+          }
+        },
+        {
+          "id": "m72",
+          "number": 72,
+          "beats": 4,
+          "effectiveChord": "Gm",
+          "chords": [
+            {
+              "id": "m72-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "Gm",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w261"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m72-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "Woo------",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w267"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m72-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "hoo,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w268"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w261",
+              "p2-w262",
+              "p2-w263",
+              "p2-w264"
+            ]
+          }
+        },
+        {
+          "id": "m73",
+          "number": 73,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [
+            {
+              "id": "m73-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "D7",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w265"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [
+            {
+              "id": "m73-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "witchy",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w269"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m73-l2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "woman,",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w310"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w265",
+              "p2-w266",
+              "p2-w297",
+              "p2-w298"
+            ]
+          }
+        },
+        {
+          "id": "m74",
+          "number": 74,
+          "beats": 4,
+          "effectiveChord": "D7",
+          "chords": [],
+          "lyricCues": [
+            {
+              "id": "m74-l1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "text": "she got",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w311",
+                  "p2-w312"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m74-l2",
+              "beat": {
+                "numerator": 1,
+                "denominator": 1
+              },
+              "text": "the",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w313"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m74-l3",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "text": "moon in",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w314",
+                  "p2-w315"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            },
+            {
+              "id": "m74-l4",
+              "beat": {
+                "numerator": 3,
+                "denominator": 1
+              },
+              "text": "her ey--- y---- y---- eyes",
+              "role": "normal",
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w316",
+                  "p2-w317",
+                  "p2-w318",
+                  "p2-w319",
+                  "p2-w320"
+                ]
+              },
+              "inference": {
+                "confidence": 0.9,
+                "evidence": [
+                  "Lyric onset aligns with a beat anchor in source geometry"
+                ]
+              }
+            }
+          ],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w300",
+              "p2-w301",
+              "p2-w302",
+              "p2-w303"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "outro",
+      "label": "Outro",
+      "measures": [
+        {
+          "id": "m75",
+          "number": 75,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m75-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w271"
+                ]
+              }
+            },
+            {
+              "id": "m75-c2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w274"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w271",
+              "p2-w273",
+              "p2-w274",
+              "p2-w276"
+            ]
+          }
+        },
+        {
+          "id": "m76",
+          "number": 76,
+          "beats": 4,
+          "effectiveChord": "G",
+          "chords": [
+            {
+              "id": "m76-c1",
+              "beat": {
+                "numerator": 0,
+                "denominator": 1
+              },
+              "symbol": "G",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w328"
+                ]
+              }
+            },
+            {
+              "id": "m76-c2",
+              "beat": {
+                "numerator": 2,
+                "denominator": 1
+              },
+              "symbol": "D",
+              "printed": true,
+              "sourceRef": {
+                "page": 2,
+                "wordIds": [
+                  "p2-w331"
+                ]
+              }
+            }
+          ],
+          "lyricCues": [],
+          "sourceRef": {
+            "page": 2,
+            "wordIds": [
+              "p2-w328",
+              "p2-w330",
+              "p2-w331",
+              "p2-w333"
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "warnings": [
+    {
+      "code": "TIME_SIGNATURE_INFERRED",
+      "message": "No explicit time signature was found; repeated four-beat bars imply 4/4.",
+      "confidence": 0.9
+    }
+  ]
+}

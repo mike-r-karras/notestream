@@ -174,6 +174,7 @@ function PracticePageContent() {
   const [offsetX, setOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
   const dragStartRef = useRef<{ x: number; offset: number }>({ x: 0, offset: 0 });
+  const preserveOffsetAfterDragRef = useRef(false);
   const viewportRef = useRef<HTMLDivElement>(null);
 
   // Auto-scroll / Metronome States
@@ -673,7 +674,7 @@ function PracticePageContent() {
             showTuning: false,
             circleRadius: 3,
             defaultColor: "#d4d4d4",
-            strokeColor: "#525252",
+            strokeColor: "#a3a3a3",
             textColor: "#f5f5f5",
           });
 
@@ -702,7 +703,7 @@ function PracticePageContent() {
       x: e.clientX,
       offset: offsetX,
     };
-    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
@@ -744,8 +745,12 @@ function PracticePageContent() {
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
+    preserveOffsetAfterDragRef.current = true;
     setIsDragging(false);
-    (e.target as HTMLElement).releasePointerCapture(e.pointerId);
+    const target = e.currentTarget as HTMLElement;
+    if (target.hasPointerCapture(e.pointerId)) {
+      target.releasePointerCapture(e.pointerId);
+    }
   };
 
   // Sound generator for Metronome Click
@@ -1021,6 +1026,11 @@ function PracticePageContent() {
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
+    if (!isDragging && preserveOffsetAfterDragRef.current) {
+      preserveOffsetAfterDragRef.current = false;
+      return;
+    }
+
     if (!isPlaying && !isDragging) {
       const targetX = playbackSequence
         ? playbackTickToPrintedX(currentTick)
@@ -1384,49 +1394,34 @@ function PracticePageContent() {
                     )}
                   </div>
                 ) : (
-                  <>
-                    {/* Chord/lyrics renderers keep their static leading staff area. */}
-                    <div className="w-[150px] h-full flex flex-col bg-neutral-950 border-r border-neutral-850 shrink-0 z-20 relative select-none shadow-[4px_0_12px_rgba(0,0,0,0.6)]">
-                      <div className="h-[45px]" />
-                      <svg className="w-full h-[135px]" viewBox="0 0 150 135" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <line x1="0" y1="45" x2="150" y2="45" stroke="#2a2a2a" strokeWidth="1" />
-                        <line x1="0" y1="60" x2="150" y2="60" stroke="#2a2a2a" strokeWidth="1" />
-                        <line x1="0" y1="75" x2="150" y2="75" stroke="#2a2a2a" strokeWidth="1" />
-                        <line x1="0" y1="90" x2="150" y2="90" stroke="#2a2a2a" strokeWidth="1" />
-                        <line x1="0" y1="105" x2="150" y2="105" stroke="#2a2a2a" strokeWidth="1" />
-                      </svg>
-                      <div className="h-[75px]" />
-                    </div>
-
+                  <div
+                    onPointerDown={handlePointerDown}
+                    onPointerMove={handlePointerMove}
+                    onPointerUp={handlePointerUp}
+                    onPointerCancel={handlePointerUp}
+                    onPointerLeave={handlePointerUp}
+                    className="flex-1 h-full flex items-center select-none cursor-grab active:cursor-grabbing overflow-hidden relative z-10"
+                  >
                     <div
-                      onPointerDown={handlePointerDown}
-                      onPointerMove={handlePointerMove}
-                      onPointerUp={handlePointerUp}
-                      onPointerCancel={handlePointerUp}
-                      onPointerLeave={handlePointerUp}
-                      className="flex-1 h-full select-none cursor-grab active:cursor-grabbing overflow-hidden relative z-10"
+                      style={{
+                        transform: `translateX(${offsetX}px)`,
+                        transition: isDragging ? "none" : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                      }}
+                      className="flex flex-row h-full w-max shrink-0 relative"
                     >
-                      <div
-                        style={{
-                          transform: `translateX(${offsetX}px)`,
-                          transition: isDragging ? "none" : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-                        }}
-                        className="flex flex-row h-full w-max shrink-0 relative"
-                      >
-                        {positionedSegments.map((segment) => {
-                          if (!renderer) return null;
-                          return renderer.renderSegment(segment, {
-                            isPlaying,
-                            beatCount,
-                            currentTick,
-                            offsetX,
-                            segments: positionedSegments,
-                            parsedInst,
-                          });
-                        })}
-                      </div>
+                      {positionedSegments.map((segment) => {
+                        if (!renderer) return null;
+                        return renderer.renderSegment(segment, {
+                          isPlaying,
+                          beatCount,
+                          currentTick,
+                          offsetX,
+                          segments: positionedSegments,
+                          parsedInst,
+                        });
+                      })}
                     </div>
-                  </>
+                  </div>
                 )}
               </>
             ) : (

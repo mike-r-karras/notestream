@@ -1,12 +1,19 @@
 import React from 'react';
 import { EasyScoreDocument, SheetType, InstrumentConfig } from '../../types/easyScore';
 import { detectSheetType } from '../../utils/detectSheetType';
-import { PositionedSegment, PracticeSegment, PracticeEvent } from '../../utils/practiceTimeline';
+import { PositionedSegment, PracticeSegment } from '../../utils/practiceTimeline';
 
 import { ContinuousNotation } from './notation/ContinuousNotation';
 import { StationarySignature } from './notation/StationarySignature';
 import { buildNotationTimeline } from './notation/timeline';
 import type { RenderedNoteRegistry } from './notation/renderedNoteRegistry';
+import {
+  activeChordBeatIndex,
+  beatPositionToNumber,
+  beatPositionXFromPositions,
+  buildChordLyricsTimeline,
+  type ChordLyricsSegmentPayload,
+} from './chordLyricsModel';
 
 export interface PracticeRenderContext {
   isPlaying: boolean;
@@ -16,17 +23,6 @@ export interface PracticeRenderContext {
   segments: PositionedSegment[];
   parsedInst?: InstrumentConfig | null;
   onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
-}
-
-export interface ChordLyricsSegmentPayload {
-  id: string;
-  number: number;
-  beats: number;
-  showChordBox?: boolean;
-  sectionId?: string;
-  sectionLabel?: string | null;
-  lyrics?: { text: string }[];
-  chords?: { id: string; beat: number; symbol: string; durationBeats: number; }[];
 }
 
 export interface PracticeRenderer {
@@ -60,91 +56,7 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
   },
 
   buildTimeline(document: EasyScoreDocument): PracticeSegment[] {
-    const sections = document.chordLyrics ?? document.sections ?? [];
-    const segments: PracticeSegment[] = [];
-    let lastChordSymbol = "";
-
-    sections.forEach((section) => {
-      if (section.measures && section.measures.length > 0) {
-        section.measures.forEach((measure, mIdx) => {
-          const chordSymbol = measure.chords?.[0]?.symbol || "";
-          let showChordBox = false;
-
-          if (chordSymbol) {
-            if (chordSymbol !== lastChordSymbol) {
-              showChordBox = true;
-              lastChordSymbol = chordSymbol;
-            }
-          }
-
-          // A measure in 4/4 has 4 beats. We assume 480 ticks per beat.
-          const beats = measure.beats || 4;
-          const durationTicks = beats * 480;
-          const startTick = segments.length > 0
-            ? segments[segments.length - 1].startTick + segments[segments.length - 1].durationTicks
-            : 0;
-
-          const events: PracticeEvent[] = [];
-
-          // Add measure event
-          events.push({
-            id: `${measure.id}-event`,
-            startTick,
-            durationTicks,
-            measure: measure.number,
-            kind: 'measure',
-            sourceIds: [measure.id],
-          });
-
-          // Add chord event
-          if (measure.chords && measure.chords.length > 0) {
-            measure.chords.forEach((c) => {
-              const chordStartTick = startTick + (c.beat || 0) * 480;
-              const chordDurationTicks = (c.durationBeats || 4) * 480;
-              events.push({
-                id: c.id,
-                startTick: chordStartTick,
-                durationTicks: chordDurationTicks,
-                measure: measure.number,
-                beat: c.beat,
-                kind: 'chord',
-                sourceIds: [c.id],
-              });
-            });
-          }
-
-          // Add lyric event
-          if (measure.lyrics && measure.lyrics.length > 0) {
-            measure.lyrics.forEach((lyric, lIdx) => {
-              events.push({
-                id: `${measure.id}-lyric-${lIdx}`,
-                startTick,
-                durationTicks,
-                measure: measure.number,
-                kind: 'lyric',
-                sourceIds: [`${measure.id}-lyric`],
-              });
-            });
-          }
-
-          segments.push({
-            id: measure.id,
-            startTick,
-            durationTicks,
-            preferredWidth: 270, // Standard preferred width for chord-lyrics measures
-            events,
-            payload: {
-              ...measure,
-              sectionId: section.id,
-              sectionLabel: mIdx === 0 ? section.label : null,
-              showChordBox,
-            }
-          });
-        });
-      }
-    });
-
-    return segments;
+    return buildChordLyricsTimeline(document);
   },
 
   renderSegment(
@@ -154,13 +66,14 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
     const measure = segment.payload as ChordLyricsSegmentPayload;
     if (!measure) return null;
 
-    const { isPlaying, beatCount, offsetX, segments } = context;
-
-    const lyricObj = measure.lyrics?.[0];
-    const lyricText = lyricObj?.text || "";
-
-    const chordObj = measure.chords?.[0];
-    const chordSymbol = chordObj?.symbol || "";
+    const { isPlaying, currentTick, offsetX, segments } = context;
+    const chordSymbol = measure.chordBoxSymbol;
+    const stringLabels = (context.parsedInst?.tuning || ["G", "C", "E", "A"])
+      .map((t: string) => t.replace(/\d+/, ""))
+      .join(" ");
+    const activeBeat = isPlaying
+      ? activeChordBeatIndex(currentTick, segment, measure.beats)
+      : null;
 
     // 1. Calculate local_x for sticky chordbox if applicable
     let stickyChordBoxNode = null;
@@ -169,7 +82,10 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
       const idx = segments.findIndex(s => s.id === segment.id);
       
       // Find the next segment with showChordBox = true
-      let nextChordSegmentX = segments.length * 270; // fallback if no next chord box
+      const lastSegment = segments[segments.length - 1];
+      let nextChordSegmentX = lastSegment
+        ? lastSegment.x + lastSegment.width
+        : segment.x + segment.width;
       for (let i = idx + 1; i < segments.length; i++) {
         if ((segments[i].payload as ChordLyricsSegmentPayload)?.showChordBox) {
           nextChordSegmentX = segments[i].x;
@@ -177,7 +93,11 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
         }
       }
 
-      const x_normal = segment.x + 12;
+      const normalChordLeft = Math.max(
+        4,
+        beatPositionXFromPositions(0, measure.beatPositions) - 37
+      );
+      const x_normal = segment.x + normalChordLeft;
       const x_push_limit = nextChordSegmentX - 74 - 12;
       const x_sticky = 12 - offsetX;
       const x_pos = Math.max(x_normal, Math.min(x_sticky, x_push_limit));
@@ -185,31 +105,26 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
       // Calculate local_x relative to the segment
       const local_x = x_pos - segment.x;
 
-      // Map instrument frets to vexchords labels
-      const stringLabels = (context.parsedInst?.tuning || ["G", "C", "E", "A"])
-        .map((t: string) => t.replace(/\d+/, ""))
-        .join(" ");
-
       stickyChordBoxNode = (
         <div
           key={`sticky-chordbox-${segment.id}`}
           style={{
             position: "absolute",
             left: `${local_x}px`,
-            top: "10px",
+            top: "2px",
             width: "74px",
             height: "112px",
             zIndex: 10,
           }}
-          className="bg-neutral-950/95 border border-neutral-800 rounded-xl shadow-xl flex flex-col items-center pt-2 pb-0.5 select-none overflow-hidden backdrop-blur-sm"
+          className="bg-neutral-950/95 border border-neutral-600 rounded-xl shadow-xl flex flex-col items-center pt-2 pb-0.5 select-none overflow-hidden backdrop-blur-sm"
         >
           {/* Centered Chord Name */}
-          <span className="text-[11px] font-black text-indigo-400 uppercase tracking-widest leading-none mb-0.5">
+          <span className="text-[15px] font-extrabold text-indigo-300 leading-none mb-0.5">
             {chordSymbol}
           </span>
 
           {/* String Labels */}
-          <span className="text-[7.5px] font-black text-neutral-500 uppercase tracking-[0.15em] leading-none mb-1 text-center scale-90">
+          <span className="text-[7.5px] font-black text-neutral-300 uppercase tracking-[0.15em] leading-none mb-1 text-center scale-90">
             {stringLabels}
           </span>
 
@@ -227,35 +142,32 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
       <div
         key={segment.id}
         style={{ width: `${segment.width}px` }}
-        className="h-full flex flex-col shrink-0 relative border-r border-neutral-900 select-none"
+        className="h-full shrink-0 relative select-none"
       >
-        {/* Floating Section Label Badge */}
+        {/* Section labels stay attached to the top of the viewport. */}
         {measure.sectionLabel && (
-          <div className="absolute top-1.5 left-3 z-30 bg-indigo-950/80 border border-indigo-800/80 text-[9px] text-indigo-300 font-extrabold tracking-widest px-2 py-0.5 rounded uppercase select-none shadow-sm">
+          <div className="absolute top-2 left-3 z-30 bg-indigo-950/80 border border-indigo-700 text-[10px] text-indigo-200 font-extrabold tracking-widest px-2 py-0.5 rounded uppercase select-none shadow-sm">
             {measure.sectionLabel}
           </div>
         )}
 
-        {/* Top portion spacer */}
-        <div className="h-[45px] w-full relative select-none" />
+        <div className="absolute inset-x-0 top-1/2 h-[255px] -translate-y-1/2">
+          {/* Top portion spacer */}
+          <div className="h-[45px] w-full relative select-none" />
 
-        {/* Middle Portion: Staff Lines & Beat Strum Hash Marks */}
-        <svg className="w-full h-[135px]" viewBox={`0 0 ${segment.width} 135`} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="45" x2={segment.width} y2="45" stroke="#1f1f1f" strokeWidth="1" />
-          <line x1="0" y1="60" x2={segment.width} y2="60" stroke="#1f1f1f" strokeWidth="1" />
-          <line x1="0" y1="75" x2={segment.width} y2="75" stroke="#1f1f1f" strokeWidth="1" />
-          <line x1="0" y1="90" x2={segment.width} y2="90" stroke="#1f1f1f" strokeWidth="1" />
-          <line x1="0" y1="105" x2={segment.width} y2="105" stroke="#1f1f1f" strokeWidth="1" />
+          {/* Middle Portion: Staff Lines & Beat Strum Hash Marks */}
+          <svg className="w-full h-[135px]" viewBox={`0 0 ${segment.width} 135`} fill="none" xmlns="http://www.w3.org/2000/svg">
+          <line x1="0" y1="45" x2={segment.width} y2="45" stroke="#525252" strokeWidth="1" />
+          <line x1="0" y1="60" x2={segment.width} y2="60" stroke="#525252" strokeWidth="1" />
+          <line x1="0" y1="75" x2={segment.width} y2="75" stroke="#525252" strokeWidth="1" />
+          <line x1="0" y1="90" x2={segment.width} y2="90" stroke="#525252" strokeWidth="1" />
+          <line x1="0" y1="105" x2={segment.width} y2="105" stroke="#525252" strokeWidth="1" />
 
           {/* Strum Hash Marks */}
           {Array.from({ length: measure.beats || 4 }).map((_, bIdx) => {
-            const beatWidth = segment.width / (measure.beats || 4);
-            const x = beatWidth * bIdx + beatWidth / 2;
+            const x = beatPositionXFromPositions(bIdx, measure.beatPositions);
             
-            // Find idx in context segments to calculate absolute beat
-            const segIdx = segments.findIndex(s => s.id === segment.id);
-            const absoluteBeatIdx = segIdx * 4 + bIdx;
-            const isActiveBeat = isPlaying && (beatCount === absoluteBeatIdx + 1);
+            const isActiveBeat = activeBeat === bIdx;
 
             return (
               <line
@@ -278,31 +190,73 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
 
           {/* Right vertical bar line */}
           <line
-            x1={segment.width}
+            x1={segment.width - 0.5}
             y1="45"
-            x2={segment.width}
+            x2={segment.width - 0.5}
             y2="105"
-            stroke={segment.id === segments[segments.length - 1]?.id ? "#6366f1" : "#2a2a2a"}
+            stroke={segment.id === segments[segments.length - 1]?.id ? "#6366f1" : "#525252"}
             strokeWidth={segment.id === segments[segments.length - 1]?.id ? "4" : "1"}
           />
           {segment.id === segments[segments.length - 1]?.id && (
             <line x1={segment.width - 9} y1="45" x2={segment.width - 9} y2="105" stroke="#6366f1" strokeWidth="1" />
           )}
-        </svg>
+          </svg>
 
-        {/* Bottom Portion: Lyrics */}
-        <div className="h-[75px] w-full flex items-center justify-center px-2 text-center select-none">
-          {lyricText ? (
-            <span className="text-[15px] text-neutral-300 font-semibold tracking-wide leading-snug">
-              {lyricText}
+          {/* Bottom Portion: Lyrics */}
+          <div className="h-[75px] w-full relative select-none">
+          {measure.lyricCues.length > 0 ? measure.lyricCues.map(cue => (
+            <span
+              key={cue.id}
+              data-beat={beatPositionToNumber(cue.beat)}
+              className={`absolute top-5 whitespace-nowrap text-[14px] font-semibold tracking-normal leading-snug ${
+                cue.role === 'pickup' ? 'text-indigo-300 italic' : 'text-neutral-300'
+              }`}
+              style={{
+                left: beatPositionXFromPositions(cue.beat, measure.beatPositions),
+                transform: 'translateX(-12px)',
+              }}
+            >
+              {cue.text}
             </span>
-          ) : (
+          )) : (
             <span className="text-[13px] text-neutral-700 italic select-none">...</span>
           )}
-        </div>
+          </div>
 
-        {/* Sticky chordbox layer */}
-        {stickyChordBoxNode}
+          {/* Sticky chordbox layer */}
+          {stickyChordBoxNode}
+          {measure.chords?.filter((chord, index) =>
+            chord.printed !== false &&
+            !(index === 0 && beatPositionToNumber(chord.beat) === 0 && chord.symbol === chordSymbol)
+          ).map(chord => (
+            <div
+              key={`inline-chordbox-${chord.id}`}
+              data-chord-id={chord.id}
+              data-beat={beatPositionToNumber(chord.beat)}
+              style={{
+                position: 'absolute',
+                left: `${beatPositionXFromPositions(chord.beat, measure.beatPositions) - 37}px`,
+                top: '2px',
+                width: '74px',
+                height: '112px',
+                zIndex: 9,
+              }}
+              className="bg-neutral-950/95 border border-neutral-600 rounded-xl shadow-xl flex flex-col items-center pt-2 pb-0.5 select-none overflow-hidden backdrop-blur-sm"
+            >
+              <span className="text-[15px] font-extrabold text-indigo-300 leading-none mb-0.5">
+                {chord.symbol}
+              </span>
+              <span className="text-[7.5px] font-black text-neutral-300 uppercase tracking-[0.15em] leading-none mb-1 text-center scale-90">
+                {stringLabels}
+              </span>
+              <div
+                className="chord-diagram-container"
+                data-chord={chord.symbol}
+                style={{ width: '64px', height: '72px' }}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

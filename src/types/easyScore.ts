@@ -30,17 +30,52 @@ export interface EasyScorePart {
   staves?: EasyScoreStaff[];
 }
 
+export interface RationalBeatPosition {
+  numerator: number;
+  denominator: number;
+}
+
+export type BeatPosition = number | RationalBeatPosition;
+
+export interface SourceReference {
+  page: number;
+  wordIds: string[];
+}
+
+export interface InferenceEvidence {
+  confidence: number;
+  evidence: string[];
+}
+
+export interface ChordChange {
+  id: string;
+  beat: BeatPosition;
+  symbol: string;
+  printed?: boolean;
+  durationBeats?: number;
+  sourceRef?: SourceReference;
+  inference?: InferenceEvidence;
+}
+
+export interface LyricCue {
+  id: string;
+  beat: BeatPosition;
+  text: string;
+  role?: 'normal' | 'pickup';
+  sourceRef?: SourceReference;
+  inference?: InferenceEvidence;
+}
+
 export interface ChordLyricMeasure {
   id: string;
   number: number;
   beats: number;
-  chords?: {
-    id: string;
-    beat: number;
-    symbol: string;
-    durationBeats: number;
-  }[];
+  effectiveChord?: string;
+  chords?: ChordChange[];
+  lyricCues?: LyricCue[];
   lyrics?: {
+    id?: string;
+    beat?: BeatPosition;
     text: string;
   }[];
   sectionId?: string;
@@ -57,6 +92,7 @@ export interface ChordLyricSection {
 
 export interface EasyScoreDocument {
   schemaVersion?: string;
+  sourceFormat?: string;
   metadata: {
     title?: string;
     subtitle?: string;
@@ -72,8 +108,10 @@ export interface EasyScoreDocument {
     author?: string;
     instrument?: string;
     sheetType?: SheetType;
+    instrumentInference?: InferenceEvidence;
   };
   sections?: ChordLyricSection[]; // preserved for backward-compatibility
   parts?: EasyScorePart[];
   chordLyrics?: ChordLyricSection[];
+  warnings?: Array<Record<string, unknown>>;
 }
