@@ -183,6 +183,10 @@ function PracticePageContent() {
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
   const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
   const [expandedChord, setExpandedChord] = useState<string | null>(null);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editedTitle, setEditedTitle] = useState("");
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const [titleSaveError, setTitleSaveError] = useState<string | null>(null);
   const [isSynthMicWarningOpen, setIsSynthMicWarningOpen] = useState(false);
   const [dontShowSynthMicWarningAgain, setDontShowSynthMicWarningAgain] = useState(false);
   const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>(() => {
@@ -424,6 +428,10 @@ function PracticePageContent() {
     [activeScore?.instrument, parsedSong?.metadata.instrument]
   );
 
+  const canEditActiveScoreTitle = !!(
+    user && token && activeScore && activeScore.user_id === user.id
+  );
+
   const resolvedPlaybackSequence = useMemo(
     () => parsedSong ? resolvePlaybackSequence(parsedSong) : undefined,
     [parsedSong]
@@ -621,6 +629,9 @@ function PracticePageContent() {
     if (activeScoreId !== prevActiveScoreIdRef.current) {
       prevActiveScoreIdRef.current = activeScoreId;
       Promise.resolve().then(() => {
+        setIsEditingTitle(false);
+        setEditedTitle("");
+        setTitleSaveError(null);
         setOffsetX(0);
         setBeatCount(0);
         setBeatMeasure(0);
@@ -1091,34 +1102,24 @@ function PracticePageContent() {
     return "G C E A";
   };
 
-  // Calculate Title & Author metadata to display in the header
+  // Calculate Title & Author metadata to display in the header. The stored
+  // score filename is authoritative when EasyScore metadata has no title.
   const getActiveScoreHeaderDetails = () => {
     if (!activeScore) return { title: "No Song Selected", subtitle: "" };
 
     let displayTitle = activeScore.title;
     let displaySubtitle = "";
 
-    if (activeScoreData) {
-      try {
-        let parsed = JSON.parse(activeScoreData);
-        if (typeof parsed === "string") {
-          parsed = JSON.parse(parsed);
-        }
-        
-        if (parsed.metadata) {
-          if (parsed.metadata.title) {
-            displayTitle = parsed.metadata.title;
-          }
-          if (parsed.metadata.writers && parsed.metadata.writers.length > 0) {
-            displaySubtitle = Array.isArray(parsed.metadata.writers)
-              ? parsed.metadata.writers.join(", ")
-              : parsed.metadata.writers;
-          } else if (parsed.metadata.author) {
-            displaySubtitle = parsed.metadata.author;
-          }
-        }
-      } catch {
-        // Fallback to activeScore properties if error parsing
+    if (parsedSong?.metadata) {
+      if (parsedSong.metadata.title?.trim()) {
+        displayTitle = parsedSong.metadata.title.trim();
+      }
+      if (parsedSong.metadata.writers && parsedSong.metadata.writers.length > 0) {
+        displaySubtitle = Array.isArray(parsedSong.metadata.writers)
+          ? parsedSong.metadata.writers.join(", ")
+          : parsedSong.metadata.writers;
+      } else if (parsedSong.metadata.author) {
+        displaySubtitle = parsedSong.metadata.author;
       }
     }
 
@@ -1130,6 +1131,45 @@ function PracticePageContent() {
   };
 
   const { title: displayHeaderTitle, subtitle: displayHeaderSubtitle } = getActiveScoreHeaderDetails();
+
+  const saveActiveScoreTitle = async () => {
+    const nextTitle = editedTitle.trim();
+    if (!nextTitle || !activeScore || !parsedSong || !user || !token) return;
+
+    setIsSavingTitle(true);
+    setTitleSaveError(null);
+    const updatedDocument: EasyScoreDocument = {
+      ...parsedSong,
+      metadata: {
+        ...parsedSong.metadata,
+        title: nextTitle,
+      },
+    };
+    const scoreRepresentation = JSON.stringify(updatedDocument);
+
+    try {
+      const response = await fetch(
+        `${API_BASE_URL}/api/users/${user.id}/scores/${activeScore.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ scoreRepresentation }),
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`Title save failed with status ${response.status}`);
+      }
+      setActiveScoreData(scoreRepresentation);
+      setIsEditingTitle(false);
+    } catch (error) {
+      setTitleSaveError(error instanceof Error ? error.message : "Unable to save title");
+    } finally {
+      setIsSavingTitle(false);
+    }
+  };
 
   // Active directory rendering items
   const currentFolders = folders.filter((f) => f.folder_parent === currentFolderId);
@@ -1160,12 +1200,70 @@ function PracticePageContent() {
               <span className="text-[10px] uppercase font-bold tracking-widest text-indigo-400">
                 {!activeScore ? "Song selector" : "Practicing"}
               </span>
-              <h2 className="text-sm sm:text-base font-extrabold text-neutral-100 truncate flex items-center gap-2">
-                {displayHeaderTitle}
-                {displayHeaderSubtitle && (
-                  <span className="text-xs font-normal text-neutral-400">by {displayHeaderSubtitle}</span>
-                )}
-              </h2>
+              {isEditingTitle ? (
+                <form
+                  className="flex items-center gap-2"
+                  onClick={(event) => event.stopPropagation()}
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void saveActiveScoreTitle();
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={editedTitle}
+                    onChange={(event) => setEditedTitle(event.target.value)}
+                    className="w-64 max-w-[45vw] rounded-md border border-indigo-500 bg-neutral-950 px-2 py-1 text-sm font-bold text-neutral-100 outline-none focus:border-indigo-300"
+                    aria-label="Score title"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={!editedTitle.trim() || isSavingTitle}
+                    className="rounded-md bg-indigo-600 px-2 py-1 text-[9px] font-black uppercase tracking-wide text-white hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    {isSavingTitle ? "Saving" : "Save"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsEditingTitle(false);
+                      setTitleSaveError(null);
+                    }}
+                    className="rounded-md bg-neutral-800 px-2 py-1 text-[9px] font-bold uppercase text-neutral-300 hover:bg-neutral-700"
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <h2 className="text-sm sm:text-base font-extrabold text-neutral-100 truncate flex items-center gap-2">
+                  {displayHeaderTitle}
+                  {displayHeaderSubtitle && (
+                    <span className="text-xs font-normal text-neutral-400">by {displayHeaderSubtitle}</span>
+                  )}
+                  {canEditActiveScoreTitle && (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        setEditedTitle(displayHeaderTitle);
+                        setTitleSaveError(null);
+                        setIsEditingTitle(true);
+                      }}
+                      className="shrink-0 rounded p-1 text-neutral-500 hover:bg-neutral-800 hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                      aria-label="Edit score title"
+                      title="Edit score title"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor" className="h-3.5 w-3.5" aria-hidden="true">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125" />
+                      </svg>
+                    </button>
+                  )}
+                </h2>
+              )}
+              {titleSaveError && (
+                <span className="text-[10px] text-rose-400">{titleSaveError}</span>
+              )}
             </div>
           </div>
 
