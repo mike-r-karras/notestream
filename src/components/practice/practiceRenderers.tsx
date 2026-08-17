@@ -9,6 +9,7 @@ import { buildNotationTimeline } from './notation/timeline';
 import type { RenderedNoteRegistry } from './notation/renderedNoteRegistry';
 import {
   activeChordBeatIndex,
+  activeLyricCueIdsAtTick,
   beatPositionToNumber,
   beatPositionXFromPositions,
   buildChordLyricsTimeline,
@@ -74,6 +75,9 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
     const activeBeat = isPlaying
       ? activeChordBeatIndex(currentTick, segment, measure.beats)
       : null;
+    const activeLyricIds = isPlaying
+      ? activeLyricCueIdsAtTick(currentTick, segment, measure.lyricCues, measure.beatTicks)
+      : new Set<string>();
 
     // 1. Calculate local_x for sticky chordbox if applicable
     let stickyChordBoxNode = null;
@@ -176,12 +180,12 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
                 y1="98"
                 x2={x + 8}
                 y2="82"
-                stroke={isActiveBeat ? "#34d399" : "#6366f1"}
-                strokeWidth={isActiveBeat ? "4.5" : "3.5"}
+                stroke={isActiveBeat ? "#7dd3fc" : "#6366f1"}
+                strokeWidth={isActiveBeat ? "5" : "3.5"}
                 strokeLinecap="round"
                 className={`transition-colors duration-100 ${
                   isActiveBeat
-                    ? "drop-shadow-[0_0_6px_rgba(52,211,153,0.8)]"
+                    ? "drop-shadow-[0_0_9px_rgba(125,211,252,1)]"
                     : "drop-shadow-[0_0_2px_rgba(99,102,241,0.5)]"
                 }`}
               />
@@ -204,21 +208,26 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
 
           {/* Bottom Portion: Lyrics */}
           <div className="h-[75px] w-full relative select-none">
-          {measure.lyricCues.length > 0 ? measure.lyricCues.map(cue => (
-            <span
-              key={cue.id}
-              data-beat={beatPositionToNumber(cue.beat)}
-              className={`absolute top-5 whitespace-nowrap text-[14px] font-semibold tracking-normal leading-snug ${
-                cue.role === 'pickup' ? 'text-indigo-300 italic' : 'text-neutral-300'
-              }`}
-              style={{
-                left: beatPositionXFromPositions(cue.beat, measure.beatPositions),
-                transform: 'translateX(-12px)',
-              }}
-            >
-              {cue.text}
-            </span>
-          )) : (
+          {measure.lyricCues.length > 0 ? measure.lyricCues.map(cue => {
+            const isActiveLyric = activeLyricIds.has(cue.id);
+            return (
+              <span
+                key={cue.id}
+                data-beat={beatPositionToNumber(cue.beat)}
+                className={`absolute top-5 whitespace-nowrap text-[14px] font-semibold tracking-normal leading-snug transition-colors duration-100 ${
+                  isActiveLyric
+                    ? 'text-sky-300 drop-shadow-[0_0_9px_rgba(125,211,252,1)]'
+                    : cue.role === 'pickup' ? 'text-indigo-300 italic' : 'text-neutral-300'
+                }`}
+                style={{
+                  left: beatPositionXFromPositions(cue.beat, measure.beatPositions),
+                  transform: 'translateX(-12px)',
+                }}
+              >
+                {cue.text}
+              </span>
+            );
+          }) : (
             <span className="text-[13px] text-neutral-700 italic select-none">...</span>
           )}
           </div>

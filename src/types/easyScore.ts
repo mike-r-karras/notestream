@@ -1,6 +1,9 @@
 export interface InstrumentConfig {
+  name?: string;
   tuning: string[];
+  frets?: number;
   chords: Record<string, (number | string)[]>;
+  chordTones?: Record<string, string[]>;
 }
 
 export type SheetType =

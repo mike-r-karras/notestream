@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import type { EasyScoreDocument } from '../../types/easyScore';
 import {
   activeChordBeatIndex,
+  activeLyricCueIdsAtTick,
   beatPositionToNumber,
   beatPositionX,
   beatPositionXFromWidths,
@@ -82,6 +83,16 @@ describe('chord lyrics timeline', () => {
     expect(activeChordBeatIndex(1439, segment, 4)).toBe(2);
     expect(activeChordBeatIndex(1440, segment, 4)).toBe(3);
     expect(activeChordBeatIndex(1920, segment, 4)).toBeNull();
+  });
+
+  it('activates lyrics independently at their exact beat positions', () => {
+    const segments = buildChordLyricsTimeline(chart);
+    const payload = segments[0].payload as { lyricCues: Array<{ id: string; beat: number | { numerator: number; denominator: number }; text: string }>; beatTicks: number };
+
+    expect([...activeLyricCueIdsAtTick(1439, segments[0], payload.lyricCues, payload.beatTicks)])
+      .toEqual([]);
+    expect([...activeLyricCueIdsAtTick(1440, segments[0], payload.lyricCues, payload.beatTicks)])
+      .toEqual(['m8-l1']);
   });
 
   it('uses the time-signature denominator for 3/8 beat timing', () => {

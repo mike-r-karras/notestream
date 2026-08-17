@@ -1,4 +1,5 @@
 // Default song and instrument data for Notestream Sandbox
+import ukuleleConfig from '../../config/instruments/ukulele.json';
 
 export const DEFAULT_SONG_JSON = `{
   "schemaVersion": "chordial-chart-v1",
@@ -1012,51 +1013,4 @@ export const DEFAULT_SONG_JSON = `{
   ]
 }`;
 
-export const DEFAULT_INSTRUMENT_JSON = `{
-  "name": "ukulele",
-  "tuning": [
-    "G4",
-    "C4",
-    "E4",
-    "A4"
-  ],
-  "frets": 12,
-  "chords": {
-    "G": [
-      0,
-      2,
-      3,
-      2
-    ],
-    "C": [
-      0,
-      0,
-      0,
-      3
-    ],
-    "D": [
-      2,
-      2,
-      2,
-      0
-    ],
-    "E": [
-      4,
-      4,
-      4,
-      2
-    ],
-    "F#m": [
-      2,
-      1,
-      2,
-      0
-    ],
-    "A": [
-      2,
-      1,
-      0,
-      0
-    ]
-  }
-}`;
+export const DEFAULT_INSTRUMENT_JSON = JSON.stringify(ukuleleConfig, null, 2);

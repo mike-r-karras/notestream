@@ -5,10 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "../../context/AuthContext";
 // @ts-expect-error vexchords is untyped
 import { ChordBox } from "vexchords";
-import { DEFAULT_SONG_JSON, DEFAULT_INSTRUMENT_JSON } from "../sandbox/defaultData";
-import { EasyScoreDocument } from "../../types/easyScore";
+import { DEFAULT_SONG_JSON } from "../sandbox/defaultData";
+import { EasyScoreDocument, InstrumentConfig } from "../../types/easyScore";
 import { PositionedSegment, positionSegments, tickToX, xToTick } from "../../utils/practiceTimeline";
-import { selectPracticeRenderer } from "../../components/practice/practiceRenderers";
+import {
+  chordLyricsPracticeRenderer,
+  selectPracticeRenderer,
+} from "../../components/practice/practiceRenderers";
 import {
   activeNoteIdsAtTick,
   beatsCrossed,
@@ -42,6 +45,8 @@ import {
   type PianoHand,
 } from "../../components/practice/handVisibility";
 import { NOTATION_LAYOUT } from "../../components/practice/notation/layout";
+import { getInstrumentConfig } from "../../config/instruments/registry";
+import { buildChordLyricsPlaybackModel } from "../../components/practice/chordLyricsPlayback";
 
 export interface Folder {
   id: number;
@@ -104,11 +109,6 @@ export interface SongRepresentation {
   sections: SectionInfo[];
 }
 
-export interface InstrumentConfig {
-  tuning: string[];
-  chords: Record<string, (number | string)[]>;
-}
-
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
 const SYNTH_MIC_WARNING_STORAGE_KEY = "notestream_hide_synth_mic_warning";
@@ -168,8 +168,6 @@ function PracticePageContent() {
   // UI Open/Collapse States - initialized safely
   const [isTopPaneExpanded, setIsTopPaneExpanded] = useState<boolean>(!scoreParam);
 
-  const [parsedInst, setParsedInst] = useState<InstrumentConfig | null>(null);
-
   // Horizontal Drag Scrolling offset
   const [offsetX, setOffsetX] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -184,6 +182,7 @@ function PracticePageContent() {
   const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
   const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
+  const [expandedChord, setExpandedChord] = useState<string | null>(null);
   const [isSynthMicWarningOpen, setIsSynthMicWarningOpen] = useState(false);
   const [dontShowSynthMicWarningAgain, setDontShowSynthMicWarningAgain] = useState(false);
   const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>(() => {
@@ -212,6 +211,7 @@ function PracticePageContent() {
   const isPlayingRef = useRef<boolean>(false);
   const playbackStartTimeRef = useRef<number>(0);
   const playbackStartElapsedRef = useRef<number>(0);
+  const previousAnimationTimeRef = useRef<number | null>(null);
   const includeStartingBeatRef = useRef<boolean>(false);
   const renderedNotesRef = useRef<RenderedNoteRegistry>(new Map());
   const highlightedIdsRef = useRef<Set<string>>(new Set());
@@ -352,19 +352,6 @@ function PracticePageContent() {
     Promise.resolve().then(fetchFoldersAndScores);
   }, [fetchFoldersAndScores]);
 
-  // Read default instrument JSON on mount
-  useEffect(() => {
-    const init = () => {
-      try {
-        const inst = JSON.parse(DEFAULT_INSTRUMENT_JSON);
-        setParsedInst(inst);
-      } catch (e) {
-        console.error("Error parsing default instrument configuration", e);
-      }
-    };
-    Promise.resolve().then(init);
-  }, []);
-
   // Compute active score dynamically from parameter to avoid set-state-in-effect and sync issues
   const activeScore = useMemo(() => {
     if (!scoreParam) return null;
@@ -429,6 +416,14 @@ function PracticePageContent() {
     }
   }, [activeScoreData]);
 
+  const parsedInst = useMemo<InstrumentConfig | null>(
+    () => getInstrumentConfig(
+      parsedSong?.metadata.instrument,
+      activeScore?.instrument
+    ),
+    [activeScore?.instrument, parsedSong?.metadata.instrument]
+  );
+
   const resolvedPlaybackSequence = useMemo(
     () => parsedSong ? resolvePlaybackSequence(parsedSong) : undefined,
     [parsedSong]
@@ -482,12 +477,14 @@ function PracticePageContent() {
 
   const playbackModel = useMemo(
     () => displaySong
-      ? buildNotationPlaybackModel(
+      ? renderer === chordLyricsPracticeRenderer
+        ? buildChordLyricsPlaybackModel(displaySong, parsedInst)
+        : buildNotationPlaybackModel(
           displaySong,
           repeatMode === "scrollback" ? playbackSequence : undefined
         )
       : { measures: [], notes: [], tones: [], beats: [], totalTicks: 0 },
-    [displaySong, playbackSequence, repeatMode]
+    [displaySong, parsedInst, playbackSequence, renderer, repeatMode]
   );
 
   const playbackTickToPrintedX = useCallback((tick: number) => {
@@ -650,6 +647,7 @@ function PracticePageContent() {
 
       const chordSymbol = container.getAttribute("data-chord");
       if (!chordSymbol) return;
+      const isExpanded = container.getAttribute("data-expanded") === "true";
 
       const frets = parsedInst.chords?.[chordSymbol];
       if (frets && Array.isArray(frets)) {
@@ -667,12 +665,12 @@ function PracticePageContent() {
 
         try {
           const box = new ChordBox(container, {
-            width: 64,
-            height: 72,
+            width: isExpanded ? 220 : 64,
+            height: isExpanded ? 250 : 72,
             numStrings: frets.length || 4,
             numFrets: 5,
             showTuning: false,
-            circleRadius: 3,
+            circleRadius: isExpanded ? 8 : 3,
             defaultColor: "#d4d4d4",
             strokeColor: "#a3a3a3",
             textColor: "#f5f5f5",
@@ -694,7 +692,16 @@ function PracticePageContent() {
       renderChordDiagrams();
     }, 100);
     return () => clearTimeout(timer);
-  }, [flattenedMeasures, parsedInst, offsetX, uniqueChords, isTopPaneExpanded, renderChordDiagrams]);
+  }, [expandedChord, flattenedMeasures, parsedInst, offsetX, uniqueChords, isTopPaneExpanded, renderChordDiagrams]);
+
+  useEffect(() => {
+    if (!expandedChord) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setExpandedChord(null);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [expandedChord]);
 
   // Pointer drag events for middle pane songsheet stream
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -878,6 +885,7 @@ function PracticePageContent() {
     if (isPlaying) {
       const now = performance.now();
       playbackStartTimeRef.current = now;
+      previousAnimationTimeRef.current = null;
       playbackStartElapsedRef.current = tickToElapsedMs(
         playbackModel,
         currentTickRef.current,
@@ -892,6 +900,12 @@ function PracticePageContent() {
     
     const loop = (time: number) => {
       if (!isPlayingRef.current) return;
+
+      const previousAnimationTime = previousAnimationTimeRef.current;
+      const frameDuration = previousAnimationTime === null
+        ? 1000 / 60
+        : Math.max(1, Math.min(100, time - previousAnimationTime));
+      previousAnimationTimeRef.current = time;
 
       const currentT = currentTickRef.current;
       const nextT = elapsedMsToTick(
@@ -955,11 +969,14 @@ function PracticePageContent() {
       }
 
       currentTickRef.current = nextT;
+      setCurrentTick(nextT);
       applyHighlights(nextT);
 
-      // LERP/Smooth the visual scroll offset
+      // Smooth the visual scroll offset from the transport clock.
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
-      const playheadX = viewportWidth * 0.4;
+      const playheadX = renderer === chordLyricsPracticeRenderer
+        ? 0
+        : viewportWidth * 0.4;
       
       const targetX = playbackSequence
         ? playbackTickToPrintedX(nextT)
@@ -977,9 +994,18 @@ function PracticePageContent() {
         nextSourceIndex !== undefined &&
         nextSourceIndex !== currentSourceIndex &&
         nextSourceIndex !== currentSourceIndex + 1;
+      // Use one time-based easing system for scrolling. A relatively long
+      // response window softens measure-width speed changes, while clamping
+      // to the previous position keeps ordinary written-order playback moving
+      // steadily forward.
+      const scrollResponseMs = 650;
+      const scrollAlpha = 1 - Math.exp(-frameDuration / scrollResponseMs);
       displayXRef.current = isTraversalJump
         ? targetX
-        : displayXRef.current + (targetX - displayXRef.current) * 0.18;
+        : Math.max(
+            displayXRef.current,
+            displayXRef.current + (targetX - displayXRef.current) * scrollAlpha
+          );
       
       const computedOffset = playheadX - displayXRef.current;
       
@@ -1022,7 +1048,7 @@ function PracticePageContent() {
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, totalTicks, visiblePlaybackTones]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, renderer, totalTicks, visiblePlaybackTones]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
@@ -1038,7 +1064,9 @@ function PracticePageContent() {
       displayXRef.current = targetX;
       
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
-      const playheadX = viewportWidth * 0.4;
+      const playheadX = renderer === chordLyricsPracticeRenderer
+        ? 0
+        : viewportWidth * 0.4;
       const computedOffset = playheadX - targetX;
 
       const totalSongWidth = positionedSegments.length > 0
@@ -1053,7 +1081,7 @@ function PracticePageContent() {
 
       setOffsetX(adjusted);
     }
-  }, [currentTick, positionedSegments, isPlaying, isDragging, playbackSequence, playbackTickToPrintedX]);
+  }, [currentTick, positionedSegments, isPlaying, isDragging, playbackSequence, playbackTickToPrintedX, renderer]);
 
   // Generate dynamic string label based on tuning configuration
   const getStringLabels = () => {
@@ -1354,7 +1382,9 @@ function PracticePageContent() {
                     <div
                       style={{
                         transform: `translateX(${offsetX}px)`,
-                        transition: isDragging ? "none" : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                        transition: isDragging || isPlaying
+                          ? "none"
+                          : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                       className="h-full w-max shrink-0 relative"
                     >
@@ -1405,7 +1435,9 @@ function PracticePageContent() {
                     <div
                       style={{
                         transform: `translateX(${offsetX}px)`,
-                        transition: isDragging ? "none" : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
+                        transition: isDragging || isPlaying
+                          ? "none"
+                          : "transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
                       }}
                       className="flex flex-row h-full w-max shrink-0 relative"
                     >
@@ -1831,14 +1863,17 @@ function PracticePageContent() {
             <div className="flex-1 bg-neutral-950/30 border border-neutral-850/60 rounded-xl px-4 py-2 flex items-center overflow-x-auto min-w-0 select-none">
               <div className="flex items-center gap-4 py-1">
                 {uniqueChords.map((chord) => (
-                  <div
+                  <button
+                    type="button"
                     key={`dict-chord-${chord}`}
-                    className="flex flex-col items-center shrink-0 w-[74px] h-[102px] bg-neutral-950 border border-neutral-850 hover:border-indigo-500/30 rounded-xl transition-all select-none pt-1"
+                    onClick={() => setExpandedChord(chord)}
+                    aria-label={`Open enlarged ${chord} chord diagram`}
+                    className="flex flex-col items-center shrink-0 w-[74px] h-[102px] bg-neutral-950 border border-neutral-850 hover:border-indigo-500/60 hover:bg-neutral-900 rounded-xl transition-all select-none pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
                     <span className="text-[10px] font-black text-neutral-300 uppercase leading-none tracking-wider mb-0.5">
                       {chord}
                     </span>
-                    <span className="text-[6.5px] font-extrabold text-neutral-600 uppercase tracking-widest leading-none mb-0.5">
+                    <span className="text-[6.5px] font-extrabold text-neutral-300 uppercase tracking-widest leading-none mb-0.5">
                       {getStringLabels()}
                     </span>
                     <div
@@ -1846,7 +1881,7 @@ function PracticePageContent() {
                       data-chord={chord}
                       style={{ width: "64px", height: "72px" }}
                     />
-                  </div>
+                  </button>
                 ))}
               </div>
             </div>
@@ -1854,6 +1889,41 @@ function PracticePageContent() {
         )}
 
       </div>
+
+      {expandedChord && (
+        <div
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setExpandedChord(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="expanded-chord-title"
+            className="flex w-full max-w-sm flex-col items-center rounded-2xl border border-indigo-500/40 bg-neutral-950 px-8 py-6 shadow-2xl shadow-indigo-950/50"
+          >
+            <h2
+              id="expanded-chord-title"
+              className="text-2xl font-black text-indigo-200"
+            >
+              {expandedChord}
+            </h2>
+            <span className="mt-1 text-xs font-extrabold uppercase tracking-[0.35em] text-neutral-300">
+              {getStringLabels()}
+            </span>
+            <div
+              className="chord-diagram-container mt-3 flex items-center justify-center"
+              data-chord={expandedChord}
+              data-expanded="true"
+              style={{ width: "220px", height: "250px" }}
+            />
+            <span className="mt-2 text-[10px] uppercase tracking-widest text-neutral-600">
+              Click outside to close
+            </span>
+          </section>
+        </div>
+      )}
 
       {isPracticeSettingsOpen && (
         <div

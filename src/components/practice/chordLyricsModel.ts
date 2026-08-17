@@ -211,6 +211,25 @@ export function activeChordBeatIndex(
   return Math.min(beats - 1, Math.floor((currentTick - segment.startTick) / beatTicks));
 }
 
+export function activeLyricCueIdsAtTick(
+  currentTick: number,
+  segment: Pick<PracticeSegment, 'startTick' | 'durationTicks'>,
+  lyricCues: LyricCue[],
+  beatTicks: number
+): Set<string> {
+  if (
+    currentTick < segment.startTick ||
+    currentTick >= segment.startTick + segment.durationTicks
+  ) return new Set();
+
+  return new Set(lyricCues
+    .filter(cue => {
+      const cueStartTick = segment.startTick + beatPositionToNumber(cue.beat) * beatTicks;
+      return cueStartTick <= currentTick && currentTick < cueStartTick + beatTicks;
+    })
+    .map(cue => cue.id));
+}
+
 export function buildChordLyricsTimeline(document: EasyScoreDocument): PracticeSegment[] {
   const sections: ChordLyricSection[] = document.chordLyrics ?? document.sections ?? [];
   const segments: PracticeSegment[] = [];
