@@ -42,3 +42,13 @@ next-env.d.ts
 
 # wsl
 *:Zone.Identifier
+
+# OpenNext
+.open-next
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+
+!.env.example
