@@ -22,7 +22,7 @@ export function readNotationTheme(host: HTMLElement): NotationTheme {
 
 export const notationThemeStyle: CSSProperties = {
   ['--notestream-notation-foreground' as string]:
-    DEFAULT_NOTATION_THEME.foreground,
+    'var(--theme-notation-foreground)',
   ['--notestream-notation-staff' as string]:
-    DEFAULT_NOTATION_THEME.staff,
+    'var(--theme-notation-staff)',
 };

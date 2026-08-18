@@ -4,6 +4,8 @@ import Link from "next/link";
 import "./globals.css";
 import { AuthProvider } from "../context/AuthContext";
 import UserMenu from "../components/UserMenu";
+import ThemeControl from "../components/ThemeControl";
+import { ThemeProvider } from "../context/ThemeContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,9 +31,14 @@ export default function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: `(function(){try{var p=localStorage.getItem('notestream_theme');var v=['system','dark','light','apple','orange','lemon','lime','blueberry','grape'];if(v.indexOf(p)<0)p='system';var t=p==='system'?(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):p;document.documentElement.dataset.theme=t;document.documentElement.dataset.themePreference=p;document.documentElement.style.colorScheme=t==='light'?'light':'dark'}catch(e){document.documentElement.dataset.theme='dark'}})();` }} />
+      </head>
       <body className="min-h-full flex flex-col bg-neutral-950 text-neutral-200">
-        <AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
           <header className="sticky top-0 z-40 w-full border-b border-neutral-800 bg-neutral-950/80 backdrop-blur-md">
             <div className="flex h-16 items-center justify-between px-6">
               <div className="flex items-center gap-8">
@@ -68,7 +75,8 @@ export default function RootLayout({
                 </Link>
                 </nav>
               </div>
-              <div className="flex items-center">
+              <div className="flex items-center gap-4">
+                <ThemeControl />
                 <UserMenu />
               </div>
             </div>
@@ -76,7 +84,8 @@ export default function RootLayout({
           <div className="flex-1 flex flex-col min-h-0">
             {children}
           </div>
-        </AuthProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

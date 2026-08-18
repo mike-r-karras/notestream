@@ -899,8 +899,8 @@
                   "startDivisions": 0,
                   "startQuarterNotes": 0.0,
                   "duration": {
-                    "divisions": 2,
-                    "quarterNotes": 0.16666666666666666,
+                    "divisions": 3,
+                    "quarterNotes": 0.25,
                     "vexflow": "16",
                     "dots": 0
                   },
@@ -929,11 +929,11 @@
                   "measureNumber": 3,
                   "voice": 5,
                   "staff": 2,
-                  "startDivisions": 2,
-                  "startQuarterNotes": 0.16666666666666666,
+                  "startDivisions": 3,
+                  "startQuarterNotes": 0.25,
                   "duration": {
-                    "divisions": 2,
-                    "quarterNotes": 0.16666666666666666,
+                    "divisions": 3,
+                    "quarterNotes": 0.25,
                     "vexflow": "16",
                     "dots": 0
                   },
@@ -965,11 +965,11 @@
                   "measureNumber": 3,
                   "voice": 5,
                   "staff": 2,
-                  "startDivisions": 4,
-                  "startQuarterNotes": 0.3333333333333333,
+                  "startDivisions": 6,
+                  "startQuarterNotes": 0.5,
                   "duration": {
-                    "divisions": 2,
-                    "quarterNotes": 0.16666666666666666,
+                    "divisions": 3,
+                    "quarterNotes": 0.25,
                     "vexflow": "16",
                     "dots": 0
                   },
@@ -998,8 +998,8 @@
                   "measureNumber": 3,
                   "voice": 5,
                   "staff": 2,
-                  "startDivisions": 6,
-                  "startQuarterNotes": 0.5,
+                  "startDivisions": 9,
+                  "startQuarterNotes": 0.75,
                   "duration": {
                     "divisions": 3,
                     "quarterNotes": 0.25,
@@ -1013,8 +1013,8 @@
                   "measureNumber": 3,
                   "voice": 5,
                   "staff": 2,
-                  "startDivisions": 9,
-                  "startQuarterNotes": 0.75,
+                  "startDivisions": 12,
+                  "startQuarterNotes": 1.0,
                   "duration": {
                     "divisions": 6,
                     "quarterNotes": 0.5,

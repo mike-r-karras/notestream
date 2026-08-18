@@ -13,17 +13,17 @@ export function SilhouetteQuestionSVG({ className = "w-10 h-10" }: { className?:
       xmlns="http://www.w3.org/2000/svg"
       className={`${className} bg-neutral-900 rounded-full border border-neutral-800 shadow-inner`}
     >
-      <circle cx="64" cy="64" r="64" fill="#171717" />
-      <circle cx="64" cy="48" r="22" fill="#525252" />
-      <path d="M28 104C28 85 44 74 64 74C84 74 100 85 100 104H28Z" fill="#525252" />
-      <circle cx="96" cy="96" r="20" fill="#4f46e5" stroke="#171717" strokeWidth="4" />
+      <circle cx="64" cy="64" r="64" fill="var(--color-neutral-900)" />
+      <circle cx="64" cy="48" r="22" fill="var(--color-neutral-600)" />
+      <path d="M28 104C28 85 44 74 64 74C84 74 100 85 100 104H28Z" fill="var(--color-neutral-600)" />
+      <circle cx="96" cy="96" r="20" fill="var(--color-indigo-600)" stroke="var(--color-neutral-900)" strokeWidth="4" />
       <text
         x="96"
         y="103"
         fontFamily="sans-serif"
         fontSize="22px"
         fontWeight="900"
-        fill="#ffffff"
+        fill="white"
         textAnchor="middle"
       >
         ?
@@ -40,9 +40,9 @@ export function SilhouetteSVG({ className = "w-10 h-10" }: { className?: string 
       xmlns="http://www.w3.org/2000/svg"
       className={`${className} bg-neutral-900 rounded-full border border-neutral-800 shadow-inner`}
     >
-      <circle cx="64" cy="64" r="64" fill="#171717" />
-      <circle cx="64" cy="48" r="22" fill="#4f46e5" />
-      <path d="M28 104C28 85 44 74 64 74C84 74 100 85 100 104H28Z" fill="#4f46e5" />
+      <circle cx="64" cy="64" r="64" fill="var(--color-neutral-900)" />
+      <circle cx="64" cy="48" r="22" fill="var(--color-indigo-600)" />
+      <path d="M28 104C28 85 44 74 64 74C84 74 100 85 100 104H28Z" fill="var(--color-indigo-600)" />
     </svg>
   );
 }

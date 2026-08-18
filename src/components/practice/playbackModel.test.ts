@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { readFileSync } from 'node:fs';
 import type { EasyScoreDocument } from '../../types/easyScore';
 import {
   activeNoteIdsAtTick,
@@ -59,6 +60,41 @@ function score(measures: unknown[]): EasyScoreDocument {
 }
 
 describe('buildNotationPlaybackModel', () => {
+  it('keeps Für Elise measure 3 arpeggios on ordinary sixteenth-note ticks', () => {
+    const fixture = JSON.parse(
+      readFileSync(
+        new URL('../../../test/fixtures/scores/fur-elise-beethoven-for-beginner-piano.ezs', import.meta.url),
+        'utf8'
+      )
+    ) as EasyScoreDocument;
+    const model = buildNotationPlaybackModel(fixture);
+    const measure = model.measures.find(item => item.number === 3);
+    expect(measure).toBeDefined();
+
+    const relativeTones = model.tones
+      .filter(tone =>
+        tone.startTick >= measure!.startTick &&
+        tone.startTick < measure!.startTick + measure!.durationTicks
+      )
+      .map(tone => ({
+        staff: tone.staff,
+        startTick: tone.startTick - measure!.startTick,
+        durationTicks: tone.durationTicks,
+      }));
+
+    expect(relativeTones.filter(tone => tone.staff === 2)).toEqual([
+      { staff: 2, startTick: 0, durationTicks: 120 },
+      { staff: 2, startTick: 120, durationTicks: 120 },
+      { staff: 2, startTick: 240, durationTicks: 120 },
+    ]);
+    expect(relativeTones.filter(tone => tone.staff === 1)).toEqual([
+      { staff: 1, startTick: 0, durationTicks: 240 },
+      { staff: 1, startTick: 240, durationTicks: 120 },
+      { staff: 1, startTick: 360, durationTicks: 120 },
+      { staff: 1, startTick: 480, durationTicks: 120 },
+    ]);
+  });
+
   it('derives 4/4 beats and accents from EasyScore measure attributes', () => {
     const model = buildNotationPlaybackModel(score([{
       id: 'P1-m1',

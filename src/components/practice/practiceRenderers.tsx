@@ -7,6 +7,8 @@ import { ContinuousNotation } from './notation/ContinuousNotation';
 import { StationarySignature } from './notation/StationarySignature';
 import { buildNotationTimeline } from './notation/timeline';
 import type { RenderedNoteRegistry } from './notation/renderedNoteRegistry';
+import type { NoteDetectionResult } from './detection/practiceDetectionTypes';
+import { mergeFeedbackKind, noteFeedbackKind } from './detection/feedbackPresentation';
 import {
   activeChordBeatIndex,
   activeLyricCueIdsAtTick,
@@ -16,14 +18,22 @@ import {
   type ChordLyricsSegmentPayload,
 } from './chordLyricsModel';
 
+const MIDI_NOTE_NAMES = ['C', 'C♯', 'D', 'D♯', 'E', 'F', 'F♯', 'G', 'G♯', 'A', 'A♯', 'B'];
+
+function midiNoteLabel(midi: number): string {
+  return `${MIDI_NOTE_NAMES[((midi % 12) + 12) % 12]}${Math.floor(midi / 12) - 1}`;
+}
+
 export interface PracticeRenderContext {
   isPlaying: boolean;
   beatCount: number;
   currentTick: number;
   offsetX: number;
+  viewportWidth?: number;
   segments: PositionedSegment[];
   parsedInst?: InstrumentConfig | null;
   onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
+  feedbackByBeatId?: ReadonlyMap<string, NoteDetectionResult[]>;
 }
 
 export interface PracticeRenderer {
@@ -161,34 +171,60 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
 
           {/* Middle Portion: Staff Lines & Beat Strum Hash Marks */}
           <svg className="w-full h-[135px]" viewBox={`0 0 ${segment.width} 135`} fill="none" xmlns="http://www.w3.org/2000/svg">
-          <line x1="0" y1="45" x2={segment.width} y2="45" stroke="#525252" strokeWidth="1" />
-          <line x1="0" y1="60" x2={segment.width} y2="60" stroke="#525252" strokeWidth="1" />
-          <line x1="0" y1="75" x2={segment.width} y2="75" stroke="#525252" strokeWidth="1" />
-          <line x1="0" y1="90" x2={segment.width} y2="90" stroke="#525252" strokeWidth="1" />
-          <line x1="0" y1="105" x2={segment.width} y2="105" stroke="#525252" strokeWidth="1" />
+          <line x1="0" y1="45" x2={segment.width} y2="45" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+          <line x1="0" y1="60" x2={segment.width} y2="60" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+          <line x1="0" y1="75" x2={segment.width} y2="75" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+          <line x1="0" y1="90" x2={segment.width} y2="90" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+          <line x1="0" y1="105" x2={segment.width} y2="105" stroke="var(--theme-staff-muted)" strokeWidth="1" />
 
           {/* Strum Hash Marks */}
           {Array.from({ length: measure.beats || 4 }).map((_, bIdx) => {
             const x = beatPositionXFromPositions(bIdx, measure.beatPositions);
-            
             const isActiveBeat = activeBeat === bIdx;
+            const toneFeedback = context.feedbackByBeatId?.get(`${segment.id}-beat-${bIdx}`) ?? [];
+            const feedbackKind = toneFeedback.reduce(
+              (kind, note) => mergeFeedbackKind(kind, noteFeedbackKind(note)),
+              undefined as ReturnType<typeof noteFeedbackKind> | undefined
+            );
+            const feedbackColor = feedbackKind
+              ? `var(--theme-feedback-${feedbackKind})`
+              : undefined;
 
             return (
-              <line
-                key={bIdx}
-                x1={x - 8}
-                y1="98"
-                x2={x + 8}
-                y2="82"
-                stroke={isActiveBeat ? "#7dd3fc" : "#6366f1"}
-                strokeWidth={isActiveBeat ? "5" : "3.5"}
-                strokeLinecap="round"
-                className={`transition-colors duration-100 ${
-                  isActiveBeat
-                    ? "drop-shadow-[0_0_9px_rgba(125,211,252,1)]"
-                    : "drop-shadow-[0_0_2px_rgba(99,102,241,0.5)]"
-                }`}
-              />
+              <g key={bIdx} data-feedback-beat={`${segment.id}-beat-${bIdx}`}>
+                <line
+                  x1={x - 8}
+                  y1="98"
+                  x2={x + 8}
+                  y2="82"
+                  stroke={feedbackColor ?? (isActiveBeat ? "var(--theme-playback-beat)" : "var(--theme-playback-idle)")}
+                  strokeWidth={feedbackKind || isActiveBeat ? "5" : "3.5"}
+                  strokeLinecap="round"
+                  style={feedbackKind
+                    ? { filter: `drop-shadow(0 0 7px var(--theme-feedback-${feedbackKind}))` }
+                    : {
+                        filter: isActiveBeat
+                          ? 'drop-shadow(0 0 9px var(--theme-playback-beat))'
+                          : 'drop-shadow(0 0 2px var(--theme-playback-idle))',
+                      }}
+                  className="transition-colors duration-100"
+                />
+                {toneFeedback.length > 0 && (
+                  <text x={x} y="124" textAnchor="middle" fontSize="9" fontWeight="700">
+                    {toneFeedback.map((note, index) => {
+                      const kind = noteFeedbackKind(note);
+                      return (
+                        <tspan
+                          key={note.id}
+                          fill={`var(--theme-feedback-${kind})`}
+                        >
+                          {index > 0 ? ' ' : ''}{midiNoteLabel(note.midi)}
+                        </tspan>
+                      );
+                    })}
+                  </text>
+                )}
+              </g>
             );
           })}
 
@@ -198,11 +234,11 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
             y1="45"
             x2={segment.width - 0.5}
             y2="105"
-            stroke={segment.id === segments[segments.length - 1]?.id ? "#6366f1" : "#525252"}
+            stroke={segment.id === segments[segments.length - 1]?.id ? "var(--theme-playback-idle)" : "var(--theme-staff-muted)"}
             strokeWidth={segment.id === segments[segments.length - 1]?.id ? "4" : "1"}
           />
           {segment.id === segments[segments.length - 1]?.id && (
-            <line x1={segment.width - 9} y1="45" x2={segment.width - 9} y2="105" stroke="#6366f1" strokeWidth="1" />
+            <line x1={segment.width - 9} y1="45" x2={segment.width - 9} y2="105" stroke="var(--theme-playback-idle)" strokeWidth="1" />
           )}
           </svg>
 
@@ -291,6 +327,8 @@ export const notationPracticeRenderer: PracticeRenderer & {
       <ContinuousNotation
         document={document}
         segments={segments}
+        offsetX={context.offsetX}
+        viewportWidth={context.viewportWidth ?? 0}
         onRenderedNotes={context.onRenderedNotes}
       />
     );

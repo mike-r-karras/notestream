@@ -136,9 +136,9 @@ export default function Sandbox() {
             numFrets: 5,
             showTuning: false,
             circleRadius: 3, // compact and tight
-            defaultColor: "#d4d4d4", // neutral-300
-            strokeColor: "#525252",  // neutral-600
-            textColor: "#f5f5f5",    // neutral-100
+            defaultColor: "var(--theme-chord-dot)",
+            strokeColor: "var(--theme-chord-stroke)",
+            textColor: "var(--theme-chord-text)",
           });
 
           box.draw({
@@ -400,11 +400,11 @@ export default function Sandbox() {
                   {/* Static Staff SVG (135px height) */}
                   <svg className="w-full h-[135px]" viewBox="0 0 150 135" fill="none" xmlns="http://www.w3.org/2000/svg">
                     {/* 5 Staff Lines spaced 15px apart */}
-                    <line x1="0" y1="45" x2="150" y2="45" stroke="#404040" strokeWidth="1" />
-                    <line x1="0" y1="60" x2="150" y2="60" stroke="#404040" strokeWidth="1" />
-                    <line x1="0" y1="75" x2="150" y2="75" stroke="#404040" strokeWidth="1" />
-                    <line x1="0" y1="90" x2="150" y2="90" stroke="#404040" strokeWidth="1" />
-                    <line x1="0" y1="105" x2="150" y2="105" stroke="#404040" strokeWidth="1" />
+                    <line x1="0" y1="45" x2="150" y2="45" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                    <line x1="0" y1="60" x2="150" y2="60" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                    <line x1="0" y1="75" x2="150" y2="75" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                    <line x1="0" y1="90" x2="150" y2="90" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                    <line x1="0" y1="105" x2="150" y2="105" stroke="var(--theme-staff-muted)" strokeWidth="1" />
 
                     {/* Treble Clef (𝄞 Unicode, font size to 69px) */}
                     <text
@@ -412,14 +412,14 @@ export default function Sandbox() {
                       y="96"
                       fontFamily="sans-serif"
                       fontSize="69px"
-                      fill="#818cf8"
+                      fill="var(--color-indigo-400)"
                       className="font-light select-none drop-shadow-[0_0_4px_rgba(99,102,241,0.4)]"
                     >
                       𝄞
                     </text>
 
                     {/* Key Signature (Key of A Major: 3 Sharps, 18px size) */}
-                    <g fill="#a3a3a3" fontSize="18px" fontFamily="monospace" fontWeight="bold">
+                    <g fill="var(--color-neutral-400)" fontSize="18px" fontFamily="monospace" fontWeight="bold">
                       {/* F# sharp (top line y = 45) */}
                       <text x="63" y="51">♯</text>
                       {/* C# sharp (third space y = 67.5) */}
@@ -429,7 +429,7 @@ export default function Sandbox() {
                     </g>
 
                     {/* Time Signature (4/4 stacked, 24px) */}
-                    <g fill="#e5e5e5" fontSize="24px" fontFamily="sans-serif" fontWeight="900" textAnchor="middle">
+                    <g fill="var(--theme-chord-text)" fontSize="24px" fontFamily="sans-serif" fontWeight="900" textAnchor="middle">
                       <text x="123" y="70">4</text>
                       <text x="123" y="94">4</text>
                     </g>
@@ -480,11 +480,11 @@ export default function Sandbox() {
                           {/* Middle Portion: Staff Lines & Strum Hash Marks */}
                           <svg className="w-full h-[135px]" viewBox="0 0 270 135" fill="none" xmlns="http://www.w3.org/2000/svg">
                             {/* 5 Staff Lines */}
-                            <line x1="0" y1="45" x2="270" y2="45" stroke="#333333" strokeWidth="1" />
-                            <line x1="0" y1="60" x2="270" y2="60" stroke="#333333" strokeWidth="1" />
-                            <line x1="0" y1="75" x2="270" y2="75" stroke="#333333" strokeWidth="1" />
-                            <line x1="0" y1="90" x2="270" y2="90" stroke="#333333" strokeWidth="1" />
-                            <line x1="0" y1="105" x2="270" y2="105" stroke="#333333" strokeWidth="1" />
+                            <line x1="0" y1="45" x2="270" y2="45" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                            <line x1="0" y1="60" x2="270" y2="60" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                            <line x1="0" y1="75" x2="270" y2="75" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                            <line x1="0" y1="90" x2="270" y2="90" stroke="var(--theme-staff-muted)" strokeWidth="1" />
+                            <line x1="0" y1="105" x2="270" y2="105" stroke="var(--theme-staff-muted)" strokeWidth="1" />
 
                             {/* Strum Hash Marks on the second line from bottom (Line 4 at y = 90) */}
                             {Array.from({ length: measure.beats || 4 }).map((_, bIdx) => {
@@ -497,7 +497,7 @@ export default function Sandbox() {
                                   y1="98"
                                   x2={x + 8}
                                   y2="82"
-                                  stroke="#818cf8"
+                                  stroke="var(--color-indigo-400)"
                                   strokeWidth="3.5"
                                   strokeLinecap="round"
                                   className="drop-shadow-[0_0_2px_rgba(129,140,248,0.6)]"
@@ -511,11 +511,11 @@ export default function Sandbox() {
                               y1="45"
                               x2="270"
                               y2="105"
-                              stroke={idx === flattenedMeasures.length - 1 ? "#818cf8" : "#404040"}
+                              stroke={idx === flattenedMeasures.length - 1 ? "var(--color-indigo-400)" : "var(--theme-staff-muted)"}
                               strokeWidth={idx === flattenedMeasures.length - 1 ? "4" : "1"}
                             />
                             {idx === flattenedMeasures.length - 1 && (
-                              <line x1="261" y1="45" x2="261" y2="105" stroke="#818cf8" strokeWidth="1" />
+                              <line x1="261" y1="45" x2="261" y2="105" stroke="var(--color-indigo-400)" strokeWidth="1" />
                             )}
                           </svg>
 

@@ -27,7 +27,12 @@ an autonomous score follower or a general-purpose transcription system.
    practice debug panel. Raw audio frames never enter React state.
 
 The practice cursor still controls progress. Detection can inform future
-scoring or cursor correction, but does not currently advance the score.
+scoring without changing clock-driven playback. In **Follow** mode, the
+transport instead holds at the current expected onset and advances only after
+the detector reports every expected pitch correctly. It jumps directly to the
+next playable onset, so written rest gaps do not require waiting. Partial
+chords, unexpected pitches, and results belonging to adjacent events do not
+advance the cursor.
 
 ## Tuning
 

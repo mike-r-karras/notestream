@@ -42,30 +42,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize session on mount
   useEffect(() => {
+    const controller = new AbortController();
+    let active = true;
+
     async function initSession() {
       const storedToken = getCookie("session_token");
       if (storedToken) {
         try {
           const res = await fetch(`${API_BASE_URL}/api/auth/session`, {
+            signal: controller.signal,
             headers: {
               Authorization: `Bearer ${storedToken}`,
             },
           });
-          if (res.ok) {
+          if (res.ok && active) {
             const result = await res.json();
+            if (!active) return;
             setUser(result.data.user);
             setToken(storedToken);
           } else {
             // Token is invalid/expired
-            document.cookie = "session_token=; max-age=0; path=/; sameSite=lax";
+            if (active) {
+              document.cookie = "session_token=; max-age=0; path=/; sameSite=lax";
+            }
           }
         } catch (e) {
-          console.error("Failed to fetch session", e);
+          if (controller.signal.aborted) return;
+          // The frontend supports guest/offline use when the application API
+          // is unavailable. Keep the cookie so the session can be retried on
+          // the next visit without turning a recoverable network failure into
+          // a Next.js development error overlay.
+          console.warn("Session API unavailable; continuing in guest mode", e);
         }
       }
-      setLoading(false);
+      if (active) setLoading(false);
     }
-    initSession();
+    void initSession();
+    return () => {
+      active = false;
+      controller.abort();
+    };
   }, []);
 
   const login = async (usernameOrEmail: string, passwordHex: string): Promise<User> => {

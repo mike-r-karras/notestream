@@ -1,4 +1,12 @@
 export type RenderedNoteRegistry = Map<string, Set<SVGElement>>;
+export type RenderedNoteFeedback = 'correct' | 'timing' | 'missed' | 'incorrect';
+
+const FEEDBACK_CLASSES: Record<RenderedNoteFeedback, string> = {
+  correct: 'notestream-feedback-correct',
+  timing: 'notestream-feedback-timing',
+  missed: 'notestream-feedback-missed',
+  incorrect: 'notestream-feedback-incorrect',
+};
 
 export function registerRenderedNote(
   registry: RenderedNoteRegistry,
@@ -11,6 +19,19 @@ export function registerRenderedNote(
     return;
   }
   registry.set(id, new Set([element]));
+}
+
+export function setRenderedNoteFeedback(
+  registry: RenderedNoteRegistry,
+  id: string,
+  feedback: RenderedNoteFeedback | null
+): void {
+  registry.get(id)?.forEach(element => {
+    Object.values(FEEDBACK_CLASSES).forEach(className => {
+      element.classList.remove(className);
+    });
+    if (feedback) element.classList.add(FEEDBACK_CLASSES[feedback]);
+  });
 }
 
 export function setRenderedNoteActive(

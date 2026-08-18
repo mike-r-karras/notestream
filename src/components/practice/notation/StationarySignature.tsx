@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../../context/ThemeContext';
 import type { EasyScoreDocument } from '../../../types/easyScore';
 import type { PositionedSegment } from '../../../utils/practiceTimeline';
 import { NOTATION_LAYOUT } from './layout';
@@ -29,6 +30,7 @@ function SignatureGroup({
   onWidth: (measureIndex: number, width: number) => void;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
 
   React.useEffect(() => {
     let cancelled = false;
@@ -109,13 +111,17 @@ function SignatureGroup({
     return () => {
       cancelled = true;
     };
-  }, [document, onWidth, signature.beatType, signature.beats, signature.clefs, signature.fifths, signature.measureIndex]);
+  }, [document, onWidth, resolvedTheme, signature.beatType, signature.beats, signature.clefs, signature.fifths, signature.measureIndex]);
 
   return (
     <div
       ref={hostRef}
-      className="absolute inset-y-0 pointer-events-none overflow-hidden bg-neutral-950 border-r border-neutral-800/80"
-      style={{ left: signature.left, width, ...notationThemeStyle }}
+      className="notestream-stationary-signature absolute inset-y-0 pointer-events-none overflow-hidden bg-neutral-950 border-r border-neutral-800/80"
+      style={{
+        left: signature.left,
+        width,
+        ...notationThemeStyle,
+      }}
     />
   );
 }

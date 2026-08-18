@@ -36,6 +36,7 @@ import type { PracticeDetectionResult } from "../../components/practice/detectio
 import { buildInlinePlaybackDocument } from "../../components/practice/inlinePlayback";
 import {
   setRenderedNoteActive,
+  setRenderedNoteFeedback,
   type RenderedNoteRegistry,
 } from "../../components/practice/notation/renderedNoteRegistry";
 import { getNotationMeasures } from "../../components/practice/notation/timeline";
@@ -47,6 +48,22 @@ import {
 import { NOTATION_LAYOUT } from "../../components/practice/notation/layout";
 import { getInstrumentConfig } from "../../config/instruments/registry";
 import { buildChordLyricsPlaybackModel } from "../../components/practice/chordLyricsPlayback";
+import { playbackScrollDistance } from "../../components/practice/scrollSynchronizer";
+import {
+  buildMetronomeSchedule,
+  metronomeBeatsInWindow,
+} from "../../components/practice/metronomeSchedule";
+import {
+  chordFeedbackByBeat,
+  musicalFeedbackMessage,
+  notationFeedbackByEvent,
+} from "../../components/practice/detection/feedbackPresentation";
+import {
+  expectedEventAtOrAfter,
+  guidedResultIsAccepted,
+  nextExpectedEvent,
+} from "../../components/practice/detection/guidedPractice";
+import { notationRenderWindow } from "../../components/practice/notation/virtualization";
 
 export interface Folder {
   id: number;
@@ -112,6 +129,11 @@ export interface SongRepresentation {
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
 const SYNTH_MIC_WARNING_STORAGE_KEY = "notestream_hide_synth_mic_warning";
+const MUSICAL_FEEDBACK_HOLD_MS = 1800;
+const METRONOME_LOOKAHEAD_MS = 200;
+const METRONOME_SCHEDULER_INTERVAL_MS = 25;
+const METRONOME_LATE_GRACE_MS = 30;
+const METRONOME_MINIMUM_LEAD_SECONDS = 0.005;
 
 type PracticeRepeatMode = "inline" | "scrollback";
 
@@ -174,13 +196,14 @@ function PracticePageContent() {
   const dragStartRef = useRef<{ x: number; offset: number }>({ x: 0, offset: 0 });
   const preserveOffsetAfterDragRef = useRef(false);
   const viewportRef = useRef<HTMLDivElement>(null);
+  const [viewportWidth, setViewportWidth] = useState(0);
 
   // Auto-scroll / Metronome States
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [bpm, setBpm] = useState<number>(100);
   const [volume, setVolume] = useState<number>(100);
   const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
-  const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal">("metronome");
+  const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal" | "follow">("metronome");
   const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
   const [expandedChord, setExpandedChord] = useState<string | null>(null);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -202,9 +225,9 @@ function PracticePageContent() {
   const [currentTick, setCurrentTick] = useState<number>(0);
   const [renderedNotes, setRenderedNotes] = useState<RenderedNoteRegistry>(new Map());
   const [isDetectionEnabled, setIsDetectionEnabled] = useState(false);
-  const [detectionSnapshot, setDetectionSnapshot] = useState<PracticeAudioDebugSnapshot | null>(null);
   const [detectionError, setDetectionError] = useState<string | null>(null);
   const [performanceResults, setPerformanceResults] = useState<Map<string, PracticeDetectionResult>>(new Map());
+  const [visibleFeedbackResults, setVisibleFeedbackResults] = useState<Map<string, PracticeDetectionResult>>(new Map());
   const [handVisibility, setHandVisibility] = useState<{
     scoreId: number | null;
     hiddenHand: PianoHand | null;
@@ -213,12 +236,14 @@ function PracticePageContent() {
   const currentTickRef = useRef<number>(0);
   const displayXRef = useRef<number>(0);
   const isPlayingRef = useRef<boolean>(false);
+  const playbackModeRef = useRef(playbackMode);
+  const guidedEventIdRef = useRef<string | null>(null);
   const playbackStartTimeRef = useRef<number>(0);
   const playbackStartElapsedRef = useRef<number>(0);
-  const previousAnimationTimeRef = useRef<number | null>(null);
   const includeStartingBeatRef = useRef<boolean>(false);
   const renderedNotesRef = useRef<RenderedNoteRegistry>(new Map());
   const highlightedIdsRef = useRef<Set<string>>(new Set());
+  const feedbackIdsRef = useRef<Set<string>>(new Set());
   const playbackHasStartedRef = useRef<boolean>(false);
 
   const audioContextRef = useRef<AudioContext | null>(null);
@@ -226,7 +251,9 @@ function PracticePageContent() {
   const volumeRef = useRef<number>(100);
   const pianoOutputRef = useRef<PianoNoteOutput | null>(null);
   const scheduledToneIdsRef = useRef<Set<string>>(new Set());
+  const scheduledMetronomeOscillatorsRef = useRef<Set<OscillatorNode>>(new Set());
   const audioDetectorRef = useRef<PracticeAudioDetector | null>(null);
+  const feedbackExpiryTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   // Load and Persist State for Storage Panel
   useEffect(() => {
@@ -476,6 +503,11 @@ function PracticePageContent() {
     return positionSegments(segments, 0); // No gap between measure-sized segments to appear continuous
   }, [displaySong, renderer]);
 
+  const segmentedRenderWindow = useMemo(
+    () => notationRenderWindow(positionedSegments, offsetX, viewportWidth),
+    [offsetX, positionedSegments, viewportWidth]
+  );
+
   const playbackSequence = useMemo(
     () => repeatMode === "scrollback"
       ? resolvedPlaybackSequence
@@ -554,6 +586,7 @@ function PracticePageContent() {
     setBeatMeasure(0);
     includeStartingBeatRef.current = false;
     playbackHasStartedRef.current = false;
+    guidedEventIdRef.current = null;
     pianoOutputRef.current?.allNotesOff();
     scheduledToneIdsRef.current.clear();
     clearHighlights();
@@ -578,6 +611,20 @@ function PracticePageContent() {
 
   const handleRenderedNotes = useCallback((notes: RenderedNoteRegistry) => {
     setRenderedNotes(notes);
+  }, []);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const updateViewportWidth = () => {
+      setViewportWidth(viewport.getBoundingClientRect().width);
+    };
+    updateViewportWidth();
+
+    const observer = new ResizeObserver(updateViewportWidth);
+    observer.observe(viewport);
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -640,9 +687,13 @@ function PracticePageContent() {
         currentTickRef.current = 0;
         displayXRef.current = 0;
         playbackHasStartedRef.current = false;
+        guidedEventIdRef.current = null;
         pianoOutputRef.current?.allNotesOff();
         scheduledToneIdsRef.current.clear();
         setPerformanceResults(new Map());
+        setVisibleFeedbackResults(new Map());
+        feedbackExpiryTimersRef.current.forEach(timer => clearTimeout(timer));
+        feedbackExpiryTimersRef.current.clear();
         clearHighlights();
       });
     }
@@ -682,9 +733,9 @@ function PracticePageContent() {
             numFrets: 5,
             showTuning: false,
             circleRadius: isExpanded ? 8 : 3,
-            defaultColor: "#d4d4d4",
-            strokeColor: "#a3a3a3",
-            textColor: "#f5f5f5",
+            defaultColor: "var(--theme-chord-dot)",
+            strokeColor: "var(--theme-chord-stroke)",
+            textColor: "var(--theme-chord-text)",
           });
 
           box.draw({
@@ -703,7 +754,16 @@ function PracticePageContent() {
       renderChordDiagrams();
     }, 100);
     return () => clearTimeout(timer);
-  }, [expandedChord, flattenedMeasures, parsedInst, offsetX, uniqueChords, isTopPaneExpanded, renderChordDiagrams]);
+  }, [
+    expandedChord,
+    flattenedMeasures,
+    parsedInst,
+    uniqueChords,
+    isTopPaneExpanded,
+    renderChordDiagrams,
+    segmentedRenderWindow.startIndex,
+    segmentedRenderWindow.endIndex,
+  ]);
 
   useEffect(() => {
     if (!expandedChord) return;
@@ -785,36 +845,54 @@ function PracticePageContent() {
     return audioContextRef.current;
   }, []);
 
-  const playClick = useCallback((isFirstBeat: boolean) => {
+  const scheduleClick = useCallback((isFirstBeat: boolean, when: number) => {
     try {
       const ctx = getAudioContext();
-      if (ctx.state === "suspended") {
-        ctx.resume();
-      }
-
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
+      const startTime = Math.max(ctx.currentTime, when);
 
       osc.connect(gain);
       gain.connect(masterGainRef.current ?? ctx.destination);
 
       if (isFirstBeat) {
-        osc.frequency.setValueAtTime(1000, ctx.currentTime);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
+        osc.frequency.setValueAtTime(1000, startTime);
+        gain.gain.setValueAtTime(0.3, startTime);
       } else {
-        osc.frequency.setValueAtTime(600, ctx.currentTime);
-        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        osc.frequency.setValueAtTime(600, startTime);
+        gain.gain.setValueAtTime(0.15, startTime);
       }
 
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
-      osc.start(ctx.currentTime);
-      osc.stop(ctx.currentTime + 0.1);
+      gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.08);
+      scheduledMetronomeOscillatorsRef.current.add(osc);
+      osc.addEventListener('ended', () => {
+        scheduledMetronomeOscillatorsRef.current.delete(osc);
+        osc.disconnect();
+        gain.disconnect();
+      }, { once: true });
+      osc.start(startTime);
+      osc.stop(startTime + 0.1);
     } catch (e) {
       console.warn("AudioContext metronome click failed to play: ", e);
     }
   }, [getAudioContext]);
 
+  const cancelScheduledClicks = useCallback(() => {
+    scheduledMetronomeOscillatorsRef.current.forEach(oscillator => {
+      try {
+        oscillator.stop();
+      } catch {
+        // An oscillator that has already ended needs no further cleanup.
+      }
+    });
+    scheduledMetronomeOscillatorsRef.current.clear();
+  }, []);
+
   const totalTicks = playbackModel.totalTicks;
+  const metronomeSchedule = useMemo(
+    () => buildMetronomeSchedule(playbackModel, bpm),
+    [bpm, playbackModel]
+  );
   const visibleDetectionStaffs = useMemo(
     () => hiddenHand === null
       ? notationStaffNumbers
@@ -835,9 +913,34 @@ function PracticePageContent() {
   const detectionBpmRef = useRef(bpm);
   const detectionExpectedEventsRef = useRef(expectedDetectionEvents);
   const hasExpectedDetectionEvents = expectedDetectionEvents.length > 0;
+  const armGuidedPractice = useCallback(() => {
+    const positionMs = tickToElapsedMs(playbackModel, currentTickRef.current, bpm);
+    const expected = expectedEventAtOrAfter(expectedDetectionEvents, positionMs)
+      ?? expectedDetectionEvents[0];
+    if (!expected) return false;
+    const tick = elapsedMsToTick(playbackModel, expected.onsetMs, bpm);
+    guidedEventIdRef.current = expected.eventId;
+    currentTickRef.current = tick;
+    setCurrentTick(tick);
+    applyHighlights(tick);
+    const position = playbackPositionAtTick(playbackModel, tick);
+    if (position) {
+      setBeatMeasure(position.measure.number);
+      setBeatCount(Math.floor(position.offsetTicks / position.measure.beatTicks) + 1);
+    }
+    return true;
+  }, [applyHighlights, bpm, expectedDetectionEvents, playbackModel]);
   const performanceMetrics = useMemo(
     () => scorePracticePerformance(performanceResults.values()),
     [performanceResults]
+  );
+  const notationFeedback = useMemo(
+    () => notationFeedbackByEvent(visibleFeedbackResults.values()),
+    [visibleFeedbackResults]
+  );
+  const feedbackByBeatId = useMemo(
+    () => chordFeedbackByBeat(visibleFeedbackResults.values()),
+    [visibleFeedbackResults]
   );
   const recentPerformanceResults = useMemo(
     () => [...performanceResults.values()]
@@ -847,9 +950,79 @@ function PracticePageContent() {
     [performanceResults]
   );
   const handleDetectionSnapshot = useCallback((snapshot: PracticeAudioDebugSnapshot) => {
-    setDetectionSnapshot(snapshot);
     setPerformanceResults(current => mergePerformanceResults(current, snapshot.results));
+    setVisibleFeedbackResults(current => mergePerformanceResults(current, snapshot.results));
+    snapshot.results
+      .filter(result => result.status !== "waiting")
+      .forEach(result => {
+        const existingTimer = feedbackExpiryTimersRef.current.get(result.eventId);
+        if (existingTimer) clearTimeout(existingTimer);
+        const timestamp = result.timestamp;
+        const timer = setTimeout(() => {
+          setVisibleFeedbackResults(current => {
+            const visible = current.get(result.eventId);
+            if (!visible || visible.timestamp !== timestamp) return current;
+            const next = new Map(current);
+            next.delete(result.eventId);
+            return next;
+          });
+          feedbackExpiryTimersRef.current.delete(result.eventId);
+        }, MUSICAL_FEEDBACK_HOLD_MS);
+        feedbackExpiryTimersRef.current.set(result.eventId, timer);
+      });
+
+    if (playbackModeRef.current !== "follow" || !isPlayingRef.current) return;
+    const currentEventId = guidedEventIdRef.current;
+    const accepted = snapshot.results.find(result =>
+      currentEventId !== null && guidedResultIsAccepted(result, currentEventId)
+    );
+    if (!accepted || !currentEventId) return;
+
+    const next = nextExpectedEvent(detectionExpectedEventsRef.current, currentEventId);
+    if (!next) {
+      guidedEventIdRef.current = null;
+      const completedTick = detectionPlaybackModelRef.current.totalTicks;
+      currentTickRef.current = completedTick;
+      setCurrentTick(completedTick);
+      applyHighlights(completedTick);
+      setIsPlaying(false);
+      setBeatCount(0);
+      setBeatMeasure(0);
+      return;
+    }
+
+    guidedEventIdRef.current = next.eventId;
+    const nextTick = elapsedMsToTick(
+      detectionPlaybackModelRef.current,
+      next.onsetMs,
+      detectionBpmRef.current
+    );
+    currentTickRef.current = nextTick;
+    setCurrentTick(nextTick);
+    applyHighlights(nextTick);
+    const position = playbackPositionAtTick(detectionPlaybackModelRef.current, nextTick);
+    if (position) {
+      setBeatMeasure(position.measure.number);
+      setBeatCount(Math.floor(position.offsetTicks / position.measure.beatTicks) + 1);
+    }
+  }, [applyHighlights]);
+
+  useEffect(() => () => {
+    feedbackExpiryTimersRef.current.forEach(timer => clearTimeout(timer));
+    feedbackExpiryTimersRef.current.clear();
   }, []);
+
+  useEffect(() => {
+    feedbackIdsRef.current.forEach(id => {
+      if (!notationFeedback.has(id)) {
+        setRenderedNoteFeedback(renderedNotesRef.current, id, null);
+      }
+    });
+    notationFeedback.forEach((feedback, id) => {
+      setRenderedNoteFeedback(renderedNotesRef.current, id, feedback);
+    });
+    feedbackIdsRef.current = new Set(notationFeedback.keys());
+  }, [notationFeedback, renderedNotes]);
 
   useEffect(() => {
     detectionPlaybackModelRef.current = playbackModel;
@@ -879,6 +1052,7 @@ function PracticePageContent() {
       detector.stop();
       if (audioDetectorRef.current === detector) audioDetectorRef.current = null;
       setIsDetectionEnabled(false);
+      if (playbackModeRef.current === "follow") setIsPlaying(false);
       setDetectionError(error instanceof Error ? error.message : "Microphone access failed");
     });
     return () => {
@@ -893,10 +1067,13 @@ function PracticePageContent() {
   }, [isPlaying]);
 
   useEffect(() => {
-    if (isPlaying) {
+    playbackModeRef.current = playbackMode;
+  }, [playbackMode]);
+
+  useEffect(() => {
+    if (isPlaying && playbackMode !== "follow") {
       const now = performance.now();
       playbackStartTimeRef.current = now;
-      previousAnimationTimeRef.current = null;
       playbackStartElapsedRef.current = tickToElapsedMs(
         playbackModel,
         currentTickRef.current,
@@ -904,19 +1081,59 @@ function PracticePageContent() {
       );
       includeStartingBeatRef.current = true;
     }
-  }, [isPlaying, bpm, playbackModel]);
+  }, [isPlaying, bpm, playbackMode, playbackModel]);
+
+  useEffect(() => {
+    if (!isPlaying || playbackMode !== "metronome") {
+      cancelScheduledClicks();
+      return;
+    }
+
+    const context = getAudioContext();
+    const scheduledIds = new Set<string>();
+    let cancelled = false;
+    let intervalId: ReturnType<typeof setInterval> | undefined;
+
+    const scheduleWindow = () => {
+      if (cancelled) return;
+      const transportElapsedMs = playbackStartElapsedRef.current +
+        performance.now() - playbackStartTimeRef.current;
+      const beats = metronomeBeatsInWindow(
+        metronomeSchedule,
+        transportElapsedMs - METRONOME_LATE_GRACE_MS,
+        transportElapsedMs + METRONOME_LOOKAHEAD_MS
+      );
+      beats.forEach(beat => {
+        if (scheduledIds.has(beat.id)) return;
+        const audioTime = context.currentTime + Math.max(
+          METRONOME_MINIMUM_LEAD_SECONDS,
+          (beat.elapsedMs - transportElapsedMs) / 1000
+        );
+        scheduleClick(beat.accent, audioTime);
+        scheduledIds.add(beat.id);
+      });
+    };
+
+    void context.resume().then(() => {
+      if (cancelled) return;
+      scheduleWindow();
+      intervalId = setInterval(scheduleWindow, METRONOME_SCHEDULER_INTERVAL_MS);
+    }).catch(error => {
+      console.warn("AudioContext metronome scheduler failed to start: ", error);
+    });
+
+    return () => {
+      cancelled = true;
+      if (intervalId !== undefined) clearInterval(intervalId);
+      cancelScheduledClicks();
+    };
+  }, [bpm, cancelScheduledClicks, getAudioContext, isPlaying, metronomeSchedule, playbackMode, scheduleClick]);
 
   useEffect(() => {
     let animId: number;
     
     const loop = (time: number) => {
-      if (!isPlayingRef.current) return;
-
-      const previousAnimationTime = previousAnimationTimeRef.current;
-      const frameDuration = previousAnimationTime === null
-        ? 1000 / 60
-        : Math.max(1, Math.min(100, time - previousAnimationTime));
-      previousAnimationTimeRef.current = time;
+      if (!isPlayingRef.current || playbackModeRef.current === "follow") return;
 
       const currentT = currentTickRef.current;
       const nextT = elapsedMsToTick(
@@ -938,7 +1155,6 @@ function PracticePageContent() {
         if (playbackMode === "metronome") {
           setIsFlashing(true);
           setTimeout(() => setIsFlashing(false), 80);
-          crossedBeats.forEach(beat => playClick(beat.accent));
         }
         const latestBeat = crossedBeats[crossedBeats.length - 1];
         setBeatMeasure(latestBeat.measure);
@@ -983,42 +1199,19 @@ function PracticePageContent() {
       setCurrentTick(nextT);
       applyHighlights(nextT);
 
-      // Smooth the visual scroll offset from the transport clock.
+      // Derive visual scrolling from the transport clock without using the
+      // engraved position as musical time.
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
-      const playheadX = renderer === chordLyricsPracticeRenderer
-        ? 0
-        : viewportWidth * 0.4;
-      
       const targetX = playbackSequence
         ? playbackTickToPrintedX(nextT)
         : tickToX(nextT, positionedSegments);
-      const currentSourceIndex = playbackPositionAtTick(
-        playbackModel,
-        currentT
-      )?.measure.sourceMeasureIndex;
-      const nextSourceIndex = playbackPositionAtTick(
-        playbackModel,
-        nextT
-      )?.measure.sourceMeasureIndex;
-      const isTraversalJump =
-        currentSourceIndex !== undefined &&
-        nextSourceIndex !== undefined &&
-        nextSourceIndex !== currentSourceIndex &&
-        nextSourceIndex !== currentSourceIndex + 1;
-      // Use one time-based easing system for scrolling. A relatively long
-      // response window softens measure-width speed changes, while clamping
-      // to the previous position keeps ordinary written-order playback moving
-      // steadily forward.
-      const scrollResponseMs = 650;
-      const scrollAlpha = 1 - Math.exp(-frameDuration / scrollResponseMs);
-      displayXRef.current = isTraversalJump
-        ? targetX
-        : Math.max(
-            displayXRef.current,
-            displayXRef.current + (targetX - displayXRef.current) * scrollAlpha
-          );
-      
-      const computedOffset = playheadX - displayXRef.current;
+      const { distance } = playbackScrollDistance(
+        targetX,
+        viewportWidth,
+        positionedSegments[1]?.x
+      );
+      displayXRef.current = distance;
+      const computedOffset = -distance;
       
       // Boundary clamp
       const totalSongWidth = positionedSegments.length > 0
@@ -1043,6 +1236,7 @@ function PracticePageContent() {
         setBeatCount(0);
         setBeatMeasure(0);
         playbackHasStartedRef.current = false;
+        guidedEventIdRef.current = null;
         pianoOutputRef.current?.allNotesOff();
         scheduledToneIdsRef.current.clear();
         clearHighlights();
@@ -1052,14 +1246,14 @@ function PracticePageContent() {
       }
     };
 
-    if (isPlaying) {
+    if (isPlaying && playbackMode !== "follow") {
       animId = requestAnimationFrame(loop);
     }
 
     return () => {
       cancelAnimationFrame(animId);
     };
-  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, playClick, positionedSegments, renderer, totalTicks, visiblePlaybackTones]);
+  }, [applyHighlights, bpm, clearHighlights, getAudioContext, isDetectionEnabled, isPlaying, playbackMode, playbackModel, playbackSequence, playbackTickToPrintedX, positionedSegments, renderer, totalTicks, visiblePlaybackTones]);
 
   // Sync visual offsets when song/tick changes while not playing or dragging
   useEffect(() => {
@@ -1068,17 +1262,18 @@ function PracticePageContent() {
       return;
     }
 
-    if (!isPlaying && !isDragging) {
+    if ((!isPlaying || playbackMode === "follow") && !isDragging) {
       const targetX = playbackSequence
         ? playbackTickToPrintedX(currentTick)
         : tickToX(currentTick, positionedSegments);
-      displayXRef.current = targetX;
-      
       const viewportWidth = viewportRef.current ? viewportRef.current.getBoundingClientRect().width : 0;
-      const playheadX = renderer === chordLyricsPracticeRenderer
-        ? 0
-        : viewportWidth * 0.4;
-      const computedOffset = playheadX - targetX;
+      const { distance } = playbackScrollDistance(
+        targetX,
+        viewportWidth,
+        positionedSegments[1]?.x
+      );
+      displayXRef.current = distance;
+      const computedOffset = -distance;
 
       const totalSongWidth = positionedSegments.length > 0
         ? positionedSegments[positionedSegments.length - 1].x + positionedSegments[positionedSegments.length - 1].width
@@ -1092,7 +1287,7 @@ function PracticePageContent() {
 
       setOffsetX(adjusted);
     }
-  }, [currentTick, positionedSegments, isPlaying, isDragging, playbackSequence, playbackTickToPrintedX, renderer]);
+  }, [currentTick, positionedSegments, isPlaying, isDragging, playbackMode, playbackSequence, playbackTickToPrintedX, renderer]);
 
   // Generate dynamic string label based on tuning configuration
   const getStringLabels = () => {
@@ -1464,7 +1659,8 @@ function PracticePageContent() {
             )}
             <div
               ref={viewportRef}
-              className="h-full w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden shadow-[inset_0_2px_15px_rgba(0,0,0,0.8)]"
+              className="h-full w-full bg-neutral-950 border border-neutral-850 rounded-2xl relative flex overflow-hidden"
+              style={{ boxShadow: 'inset 0 2px 15px var(--theme-viewport-inner-shadow)' }}
             >
             {activeScore && flattenedMeasures.length > 0 ? (
               <>
@@ -1491,9 +1687,11 @@ function PracticePageContent() {
                         beatCount,
                         currentTick,
                         offsetX,
+                        viewportWidth,
                         segments: positionedSegments,
                         parsedInst,
                         onRenderedNotes: handleRenderedNotes,
+                        feedbackByBeatId,
                       })}
                     </div>
                     {renderer.renderStationaryOverlay?.(displaySong, positionedSegments, {
@@ -1501,9 +1699,11 @@ function PracticePageContent() {
                       beatCount,
                       currentTick,
                       offsetX,
+                      viewportWidth,
                       segments: positionedSegments,
                       parsedInst,
                       onRenderedNotes: handleRenderedNotes,
+                      feedbackByBeatId,
                     })}
                     {hiddenHand && (
                       <div
@@ -1539,7 +1739,17 @@ function PracticePageContent() {
                       }}
                       className="flex flex-row h-full w-max shrink-0 relative"
                     >
-                      {positionedSegments.map((segment) => {
+                      <div
+                        className="h-full shrink-0"
+                        style={{ width: `${segmentedRenderWindow.left}px` }}
+                        aria-hidden="true"
+                      />
+                      {positionedSegments
+                        .slice(
+                          segmentedRenderWindow.startIndex,
+                          segmentedRenderWindow.endIndex + 1
+                        )
+                        .map((segment) => {
                         if (!renderer) return null;
                         return renderer.renderSegment(segment, {
                           isPlaying,
@@ -1548,8 +1758,21 @@ function PracticePageContent() {
                           offsetX,
                           segments: positionedSegments,
                           parsedInst,
+                          feedbackByBeatId,
                         });
                       })}
+                      <div
+                        className="h-full shrink-0"
+                        style={{
+                          width: `${Math.max(
+                            0,
+                            (positionedSegments.at(-1)?.x ?? 0) +
+                              (positionedSegments.at(-1)?.width ?? 0) -
+                              segmentedRenderWindow.right
+                          )}px`,
+                        }}
+                        aria-hidden="true"
+                      />
                     </div>
                   </div>
                 )}
@@ -1593,13 +1816,20 @@ function PracticePageContent() {
               <button
                 type="button"
                 onClick={() => {
-                  setDetectionSnapshot(null);
                   setDetectionError(null);
                   if (isDetectionEnabled) {
                     setIsDetectionEnabled(false);
+                    if (playbackMode === "follow") {
+                      playbackModeRef.current = "highlight";
+                      setPlaybackMode("highlight");
+                      guidedEventIdRef.current = null;
+                    }
                     return;
                   }
                   setPerformanceResults(new Map());
+                  setVisibleFeedbackResults(new Map());
+                  feedbackExpiryTimersRef.current.forEach(timer => clearTimeout(timer));
+                  feedbackExpiryTimersRef.current.clear();
                   if (playbackMode === "tonal") {
                     pianoOutputRef.current?.allNotesOff();
                     scheduledToneIdsRef.current.clear();
@@ -1642,16 +1872,18 @@ function PracticePageContent() {
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-1 rounded-lg bg-neutral-950/70 p-1 border border-neutral-800">
+          <div className="grid grid-cols-4 gap-1 rounded-lg bg-neutral-950/70 p-1 border border-neutral-800">
             {([
               ["highlight", "Highlight"],
               ["metronome", "Metronome"],
               ["tonal", "Synth"],
+              ["follow", "Follow"],
             ] as const).map(([mode, label]) => (
               <button
                 key={mode}
                 type="button"
                 onClick={() => {
+                  cancelScheduledClicks();
                   pianoOutputRef.current?.allNotesOff();
                   scheduledToneIdsRef.current.clear();
                   setIsFlashing(false);
@@ -1659,6 +1891,13 @@ function PracticePageContent() {
                     setIsDetectionEnabled(false);
                     showSynthMicWarning();
                   }
+                  if (mode === "follow") {
+                    setIsDetectionEnabled(true);
+                    armGuidedPractice();
+                  } else {
+                    guidedEventIdRef.current = null;
+                  }
+                  playbackModeRef.current = mode;
                   setPlaybackMode(mode);
                   if (isPlaying && mode !== "highlight") {
                     const ctx = getAudioContext();
@@ -1669,6 +1908,9 @@ function PracticePageContent() {
                   }
                 }}
                 disabled={totalTicks === 0}
+                title={mode === "follow"
+                  ? "Hold on each expected note or chord until you play it correctly"
+                  : `${label} playback mode`}
                 className={`rounded-md px-2 py-1 text-[9px] font-extrabold uppercase tracking-wide transition-colors disabled:opacity-40 ${
                   playbackMode === mode
                     ? "bg-indigo-600 text-white"
@@ -1687,15 +1929,20 @@ function PracticePageContent() {
                 if (totalTicks > 0) {
                   const nextPlaying = !isPlaying;
                   if (nextPlaying) {
+                    if (playbackMode === "follow") {
+                      if (!armGuidedPractice()) return;
+                      setIsDetectionEnabled(true);
+                    }
                     playbackHasStartedRef.current = true;
                     scheduledToneIdsRef.current.clear();
-                    if (playbackMode !== "highlight") {
+                    if (playbackMode !== "highlight" && playbackMode !== "follow") {
                       const ctx = getAudioContext();
                       void ctx.resume();
                     }
                   }
                   setIsPlaying(nextPlaying);
                   if (!nextPlaying) {
+                    cancelScheduledClicks();
                     setIsFlashing(false);
                     setCurrentTick(currentTickRef.current);
                     pianoOutputRef.current?.allNotesOff();
@@ -1730,6 +1977,7 @@ function PracticePageContent() {
 
             <button
               onClick={() => {
+                cancelScheduledClicks();
                 setOffsetX(0);
                 setBeatCount(0);
                 setBeatMeasure(0);
@@ -1740,9 +1988,13 @@ function PracticePageContent() {
                 displayXRef.current = 0;
                 includeStartingBeatRef.current = false;
                 playbackHasStartedRef.current = false;
+                guidedEventIdRef.current = null;
                 pianoOutputRef.current?.allNotesOff();
                 scheduledToneIdsRef.current.clear();
                 setPerformanceResults(new Map());
+                setVisibleFeedbackResults(new Map());
+                feedbackExpiryTimersRef.current.forEach(timer => clearTimeout(timer));
+                feedbackExpiryTimersRef.current.clear();
                 clearHighlights();
                 if (!isDetectionEnabled) void audioContextRef.current?.suspend();
               }}
@@ -1772,6 +2024,7 @@ function PracticePageContent() {
                 value={bpm}
                 disabled={flattenedMeasures.length === 0}
                 onChange={(e) => {
+                  cancelScheduledClicks();
                   pianoOutputRef.current?.allNotesOff();
                   scheduledToneIdsRef.current.clear();
                   includeStartingBeatRef.current = isPlaying;
@@ -1877,37 +2130,9 @@ function PracticePageContent() {
             </div>
 
             <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-neutral-800 bg-neutral-950/30 px-2 py-1.5">
-              {(isDetectionEnabled || detectionError) && (
-                <div className="mb-2 rounded-md border border-emerald-900/60 bg-emerald-950/15 p-2 font-mono text-[9px] text-neutral-300">
-                  <div className="mb-1 font-sans font-bold uppercase tracking-widest text-emerald-400">
-                    Score-guided microphone debug
-                  </div>
-                  {detectionError ? (
-                    <div className="text-rose-400">{detectionError}</div>
-                  ) : (() => {
-                    const result = detectionSnapshot?.results.at(-1);
-                    if (!result) return <div className="text-neutral-500">Waiting for the next score event…</div>;
-                    return (
-                      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
-                        <span>Expected</span>
-                        <span>{result.expectedNotes.map(note => midiLabel(note.midi)).join(" ") || "rest"}</span>
-                        <span>Confidence</span>
-                        <span>{result.expectedNotes.map(note => `${midiLabel(note.midi)} ${note.confidence.toFixed(2)}`).join(" · ")}</span>
-                        <span>Timing</span>
-                        <span>{result.timing.errorMs === undefined ? "—" : `${result.timing.errorMs >= 0 ? "+" : ""}${Math.round(result.timing.errorMs)} ms`}</span>
-                        <span>Noise / RMS</span>
-                        <span>{detectionSnapshot?.noiseFloor.toExponential(2)} / {detectionSnapshot?.rms.toFixed(4)}</span>
-                        <span>Result</span>
-                        <span className="font-bold uppercase text-emerald-300">{result.status}</span>
-                        {result.unexpectedNotes.length > 0 && (
-                          <>
-                            <span>Unexpected</span>
-                            <span className="text-amber-300">{result.unexpectedNotes.map(note => midiLabel(note.midi)).join(" ")}</span>
-                          </>
-                        )}
-                      </div>
-                    );
-                  })()}
+              {detectionError && (
+                <div className="mb-2 rounded-md border border-rose-900/60 bg-rose-950/20 p-2 text-[9px] text-rose-300">
+                  {detectionError}
                 </div>
               )}
               <div className="mb-1 text-[8px] font-bold uppercase tracking-widest text-neutral-600">
@@ -1921,11 +2146,8 @@ function PracticePageContent() {
                         key={result.eventId}
                         className="flex items-center justify-between gap-3 rounded-md bg-neutral-900/80 px-2 py-1 text-[9px] text-neutral-300"
                       >
-                        <span className="truncate font-mono">
-                          {result.expectedNotes.map(note => midiLabel(note.midi)).join("+")}
-                          {result.expectedNotes.some(note => !note.detected) && " · missing "}
-                          {result.expectedNotes.filter(note => !note.detected).map(note => midiLabel(note.midi)).join("+")}
-                          {result.unexpectedNotes.length > 0 && ` · unexpected ${result.unexpectedNotes.map(note => midiLabel(note.midi)).join("+")}`}
+                        <span className="truncate font-medium">
+                          {musicalFeedbackMessage(result, midiLabel)}
                         </span>
                         <span className={`shrink-0 font-bold uppercase ${
                           result.status === "correct" ? "text-emerald-400" :

@@ -1,5 +1,6 @@
 import React from 'react';
 import type { EasyScoreDocument } from '../../../types/easyScore';
+import { useTheme } from '../../../context/ThemeContext';
 import type { PositionedSegment } from '../../../utils/practiceTimeline';
 import { NOTATION_LAYOUT } from './layout';
 import { writtenMeasureNotation } from './notationMetadata';
@@ -17,6 +18,7 @@ import {
   type RenderedNoteRegistry,
 } from './renderedNoteRegistry';
 import { notationThemeStyle, readNotationTheme } from './theme';
+import { notationRenderWindow } from './virtualization';
 import {
   accidentalFromAlter,
   accidentalToVex,
@@ -30,19 +32,28 @@ import {
 
 function ghostNotationColor(color: string): string {
   const match = color.match(/^#([0-9a-f]{6})$/i);
-  return match ? `#${match[1]}59` : 'rgba(229, 229, 229, 0.35)';
+  return match ? `#${match[1]}59` : `color-mix(in srgb, ${color} 35%, transparent)`;
 }
 
 export function ContinuousNotation({
   document,
   segments,
+  offsetX,
+  viewportWidth,
   onRenderedNotes,
 }: {
   document: EasyScoreDocument;
   segments: PositionedSegment[];
+  offsetX: number;
+  viewportWidth: number;
   onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
+  const { resolvedTheme } = useTheme();
+  const renderWindow = React.useMemo(
+    () => notationRenderWindow(segments, offsetX, viewportWidth),
+    [offsetX, segments, viewportWidth]
+  );
 
   React.useEffect(() => {
     let cancelled = false;
@@ -103,19 +114,22 @@ export function ContinuousNotation({
       const theme = readNotationTheme(liveHost);
       const elementStyle = { fillStyle: theme.foreground, strokeStyle: theme.foreground };
 
-      liveHost.style.width = `${totalWidth}px`;
-      liveHost.style.minWidth = `${totalWidth}px`;
+      const renderedWidth = Math.max(1, renderWindow.right - renderWindow.left);
+      liveHost.style.left = `${renderWindow.left}px`;
+      liveHost.style.width = `${renderedWidth}px`;
+      liveHost.style.minWidth = `${renderedWidth}px`;
       liveHost.style.height = `${height}px`;
 
       console.log('[Notestream VexFlow v5.2-spacing] mounting continuous grand staff', {
-        measures: measures.length,
+        measures: renderWindow.endIndex - renderWindow.startIndex + 1,
+        totalMeasures: measures.length,
         staves: staffNumbers,
         totalWidth,
         height,
       });
 
       const vfRenderer = new Renderer(liveHost, Renderer.Backends.SVG);
-      vfRenderer.resize(totalWidth, height);
+      vfRenderer.resize(renderedWidth, height);
       const context = vfRenderer.getContext();
       const renderedNoteElements: Array<{
         id: string;
@@ -125,6 +139,7 @@ export function ContinuousNotation({
       }> = [];
 
       measures.forEach((measure, measureIndex) => {
+        if (measureIndex < renderWindow.startIndex || measureIndex > renderWindow.endIndex) return;
         const segment = segments[measureIndex];
         if (!segment) return;
 
@@ -141,7 +156,7 @@ export function ContinuousNotation({
         staffNumbers.forEach((staffNumber, staffIndex) => {
           const staveY = top + staffIndex * staffGap;
           const stave = new Stave(
-            segment.x + (measureIndex === 0 ? 10 : 0),
+            segment.x - renderWindow.left + (measureIndex === 0 ? 10 : 0),
             staveY,
             segment.width - (measureIndex === 0 ? 10 : 0)
           );
@@ -517,7 +532,7 @@ export function ContinuousNotation({
       });
       if (svg && lyricAnchors.length > 0) {
         const svgNamespace = 'http://www.w3.org/2000/svg';
-        const lyricColor = '#f5f5f5';
+        const lyricColor = 'var(--theme-chord-text)';
         const lyricLayer = globalThis.document.createElementNS(svgNamespace, 'g');
         lyricLayer.classList.add('notestream-lyrics');
         lyricLayer.setAttribute('fill', lyricColor);
@@ -588,7 +603,16 @@ export function ContinuousNotation({
       cancelled = true;
       onRenderedNotes?.(new Map());
     };
-  }, [document, segments, onRenderedNotes]);
+  }, [
+    document,
+    segments,
+    onRenderedNotes,
+    renderWindow.endIndex,
+    renderWindow.left,
+    renderWindow.right,
+    renderWindow.startIndex,
+    resolvedTheme,
+  ]);
 
   const totalWidth = Math.max(
     1,
@@ -597,14 +621,15 @@ export function ContinuousNotation({
 
   return (
     <div
-      ref={hostRef}
-      className="h-full shrink-0 overflow-visible"
+      className="h-full shrink-0 overflow-visible relative"
       style={{
         ...notationThemeStyle,
         width: `${totalWidth}px`,
         minWidth: `${totalWidth}px`,
       }}
       aria-label="Continuous standard notation"
-    />
+    >
+      <div ref={hostRef} className="absolute top-0 h-full overflow-visible" />
+    </div>
   );
 }

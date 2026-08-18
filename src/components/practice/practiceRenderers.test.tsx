@@ -81,4 +81,34 @@ describe('chord lyrics renderer', () => {
     expect(markup).not.toContain('uppercase tracking-widest');
     expect(segments[0].width).toBe(325.5);
   });
+
+  it('renders individual chord-tone feedback on its stable beat', () => {
+    const document: EasyScoreDocument = {
+      metadata: { sheetType: 'chord-lyrics', timeSignature: [4, 4] },
+      sections: [{
+        id: 'verse', label: 'Verse', measures: [{
+          id: 'm1', number: 1, beats: 4, effectiveChord: 'C',
+          chords: [{ id: 'c1', beat: 0, symbol: 'C' }],
+        }],
+      }],
+    };
+    const segments = positionSegments(chordLyricsPracticeRenderer.buildTimeline(document), 0);
+    const feedbackByBeatId = new Map([['m1-beat-0', [
+      { id: 'm1-beat-0-C-tone-0', midi: 60, frequency: 261.6, confidence: 1, detected: true, status: 'correct' as const },
+      { id: 'm1-beat-0-C-tone-1', midi: 64, frequency: 329.6, confidence: 0, detected: false, status: 'missing' as const },
+    ]]]);
+    const markup = renderToStaticMarkup(chordLyricsPracticeRenderer.renderSegment(segments[0], {
+      isPlaying: true,
+      beatCount: 1,
+      currentTick: 0,
+      offsetX: 0,
+      segments,
+      feedbackByBeatId,
+    }));
+
+    expect(markup).toContain('data-feedback-beat="m1-beat-0"');
+    expect(markup).toContain('var(--theme-feedback-missed)');
+    expect(markup).toContain('>C4</tspan>');
+    expect(markup).toContain('> E4</tspan>');
+  });
 });
