@@ -140,6 +140,36 @@ describe('chord lyrics timeline', () => {
     ]);
   });
 
+  it('announces an opening chord when the preceding measure ended on another chord', () => {
+    const paperMoonPattern: EasyScoreDocument = {
+      metadata: { sheetType: 'chord-lyrics', timeSignature: [4, 4] },
+      sections: [{
+        id: 'verse',
+        label: 'Verse',
+        measures: [{
+          id: 'm6', number: 6, beats: 4, effectiveChord: 'Am7',
+          chords: [
+            { id: 'm6-c1', beat: 0, symbol: 'Am7', printed: true },
+            { id: 'm6-c2', beat: 2, symbol: 'D7', printed: true },
+          ],
+        }, {
+          id: 'm7', number: 7, beats: 4, effectiveChord: 'Am7',
+          chords: [
+            { id: 'm7-c1', beat: 0, symbol: 'Am7', printed: true },
+            { id: 'm7-c2', beat: 2, symbol: 'D7', printed: true },
+          ],
+        }],
+      }],
+    };
+
+    const payloads = buildChordLyricsTimeline(paperMoonPattern)
+      .map(segment => segment.payload as { chordBoxSymbol: string; showChordBox: boolean });
+    expect(payloads).toEqual([
+      expect.objectContaining({ chordBoxSymbol: 'Am7', showChordBox: true }),
+      expect.objectContaining({ chordBoxSymbol: 'Am7', showChordBox: true }),
+    ]);
+  });
+
   it('expands individual measures for long lyrics', () => {
     const compact = preferredChordLyricsMeasureWidth({
       beats: 4,

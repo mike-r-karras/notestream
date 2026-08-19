@@ -245,7 +245,10 @@ export function buildChordLyricsTimeline(document: EasyScoreDocument): PracticeS
         : 0;
       const chordBoxSymbol = measure.effectiveChord ?? measure.chords?.[0]?.symbol ?? lastChordSymbol;
       const showChordBox = !!chordBoxSymbol && chordBoxSymbol !== lastChordSymbol;
-      if (chordBoxSymbol) lastChordSymbol = chordBoxSymbol;
+      const finalChordSymbol = measure.chords?.length
+        ? measure.chords[measure.chords.length - 1].symbol
+        : chordBoxSymbol;
+      if (finalChordSymbol) lastChordSymbol = finalChordSymbol;
 
       const lyricCues: LyricCue[] = measure.lyricCues ?? measure.lyrics?.map((lyric, index) => ({
         id: lyric.id ?? `${measure.id}-legacy-lyric-${index + 1}`,

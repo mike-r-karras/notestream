@@ -82,6 +82,32 @@ describe('chord lyrics renderer', () => {
     expect(segments[0].width).toBe(325.5);
   });
 
+  it('keeps a printed opening chord when no sticky chord box is present', () => {
+    const document: EasyScoreDocument = {
+      metadata: { sheetType: 'chord-lyrics', timeSignature: [4, 4] },
+      sections: [{
+        id: 'verse', label: 'Verse', measures: [{
+          id: 'm1', number: 1, beats: 4, effectiveChord: 'Am7',
+          chords: [{ id: 'c1', beat: 0, symbol: 'Am7', printed: true }],
+        }, {
+          id: 'm2', number: 2, beats: 4, effectiveChord: 'Am7',
+          chords: [{ id: 'c2', beat: 0, symbol: 'Am7', printed: true }],
+        }],
+      }],
+    };
+    const segments = positionSegments(chordLyricsPracticeRenderer.buildTimeline(document), 0);
+    const markup = renderToStaticMarkup(chordLyricsPracticeRenderer.renderSegment(segments[1], {
+      isPlaying: false,
+      beatCount: 0,
+      currentTick: 0,
+      offsetX: 0,
+      segments,
+    }));
+
+    expect(markup).toContain('data-chord-id="c2"');
+    expect(markup).toContain('data-chord="Am7"');
+  });
+
   it('renders individual chord-tone feedback on its stable beat', () => {
     const document: EasyScoreDocument = {
       metadata: { sheetType: 'chord-lyrics', timeSignature: [4, 4] },

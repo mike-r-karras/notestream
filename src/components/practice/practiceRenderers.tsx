@@ -34,6 +34,7 @@ export interface PracticeRenderContext {
   parsedInst?: InstrumentConfig | null;
   onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
   feedbackByBeatId?: ReadonlyMap<string, NoteDetectionResult[]>;
+  showMeasureNumbers?: boolean;
 }
 
 export interface PracticeRenderer {
@@ -272,7 +273,12 @@ export const chordLyricsPracticeRenderer: PracticeRenderer = {
           {stickyChordBoxNode}
           {measure.chords?.filter((chord, index) =>
             chord.printed !== false &&
-            !(index === 0 && beatPositionToNumber(chord.beat) === 0 && chord.symbol === chordSymbol)
+            !(
+              measure.showChordBox &&
+              index === 0 &&
+              beatPositionToNumber(chord.beat) === 0 &&
+              chord.symbol === chordSymbol
+            )
           ).map(chord => (
             <div
               key={`inline-chordbox-${chord.id}`}
@@ -330,6 +336,7 @@ export const notationPracticeRenderer: PracticeRenderer & {
         offsetX={context.offsetX}
         viewportWidth={context.viewportWidth ?? 0}
         onRenderedNotes={context.onRenderedNotes}
+        showMeasureNumbers={context.showMeasureNumbers}
       />
     );
   },

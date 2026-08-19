@@ -10,6 +10,7 @@ import { EasyScoreDocument, InstrumentConfig } from "../../types/easyScore";
 import { PositionedSegment, positionSegments, tickToX, xToTick } from "../../utils/practiceTimeline";
 import {
   chordLyricsPracticeRenderer,
+  notationPracticeRenderer,
   selectPracticeRenderer,
 } from "../../components/practice/practiceRenderers";
 import {
@@ -64,6 +65,11 @@ import {
   nextExpectedEvent,
 } from "../../components/practice/detection/guidedPractice";
 import { notationRenderWindow } from "../../components/practice/notation/virtualization";
+import {
+  parseSongPracticeSettings,
+  songPracticeSettingsKey,
+  type SongPracticeSettings,
+} from "../../components/practice/practiceSettings";
 
 export interface Folder {
   id: number;
@@ -127,7 +133,6 @@ export interface SongRepresentation {
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
-const PRACTICE_REPEAT_MODE_STORAGE_KEY = "notestream_practice_repeat_mode";
 const SYNTH_MIC_WARNING_STORAGE_KEY = "notestream_hide_synth_mic_warning";
 const MUSICAL_FEEDBACK_HOLD_MS = 1800;
 const METRONOME_LOOKAHEAD_MS = 200;
@@ -203,6 +208,7 @@ function PracticePageContent() {
   const [bpm, setBpm] = useState<number>(100);
   const [volume, setVolume] = useState<number>(100);
   const [isFeedbackVisible, setIsFeedbackVisible] = useState<boolean>(true);
+  const [showMeasureNumbers, setShowMeasureNumbers] = useState<boolean>(false);
   const [playbackMode, setPlaybackMode] = useState<"highlight" | "metronome" | "tonal" | "follow">("metronome");
   const [isPracticeSettingsOpen, setIsPracticeSettingsOpen] = useState<boolean>(false);
   const [expandedChord, setExpandedChord] = useState<string | null>(null);
@@ -212,13 +218,7 @@ function PracticePageContent() {
   const [titleSaveError, setTitleSaveError] = useState<string | null>(null);
   const [isSynthMicWarningOpen, setIsSynthMicWarningOpen] = useState(false);
   const [dontShowSynthMicWarningAgain, setDontShowSynthMicWarningAgain] = useState(false);
-  const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>(() => {
-    if (typeof window === "undefined") return "scrollback";
-    const savedRepeatMode = localStorage.getItem(PRACTICE_REPEAT_MODE_STORAGE_KEY);
-    return savedRepeatMode === "inline" || savedRepeatMode === "scrollback"
-      ? savedRepeatMode
-      : "scrollback";
-  });
+  const [repeatMode, setRepeatMode] = useState<PracticeRepeatMode>("scrollback");
   const [beatCount, setBeatCount] = useState<number>(0);
   const [beatMeasure, setBeatMeasure] = useState<number>(0);
   const [isFlashing, setIsFlashing] = useState<boolean>(false);
@@ -245,6 +245,8 @@ function PracticePageContent() {
   const highlightedIdsRef = useRef<Set<string>>(new Set());
   const feedbackIdsRef = useRef<Set<string>>(new Set());
   const playbackHasStartedRef = useRef<boolean>(false);
+  const settingsScoreKeyRef = useRef<string | null>(null);
+  const restoringSettingsSnapshotRef = useRef<string | null>(null);
 
   const audioContextRef = useRef<AudioContext | null>(null);
   const masterGainRef = useRef<GainNode | null>(null);
@@ -287,10 +289,6 @@ function PracticePageContent() {
   useEffect(() => {
     localStorage.setItem("notestream_practice_expanded_folders", JSON.stringify(expandedFolderIds));
   }, [expandedFolderIds]);
-
-  useEffect(() => {
-    localStorage.setItem(PRACTICE_REPEAT_MODE_STORAGE_KEY, repeatMode);
-  }, [repeatMode]);
 
   useEffect(() => {
     if (!isPracticeSettingsOpen && !isSynthMicWarningOpen) return;
@@ -389,6 +387,75 @@ function PracticePageContent() {
     const scoreId = parseInt(scoreParam, 10);
     return scores.find((s) => s.id === scoreId) || null;
   }, [scoreParam, scores]);
+
+  useEffect(() => {
+    if (!activeScore) {
+      settingsScoreKeyRef.current = null;
+      restoringSettingsSnapshotRef.current = null;
+      return;
+    }
+
+    const storageKey = songPracticeSettingsKey(activeScore.id, activeScore.user_id);
+    const settings = parseSongPracticeSettings(localStorage.getItem(storageKey));
+    settingsScoreKeyRef.current = storageKey;
+    restoringSettingsSnapshotRef.current = JSON.stringify(settings);
+
+    volumeRef.current = settings.volume;
+    playbackModeRef.current = settings.playbackMode;
+    Promise.resolve().then(() => {
+      setBpm(settings.bpm);
+      setVolume(settings.volume);
+      setPlaybackMode(settings.playbackMode);
+      setRepeatMode(settings.repeatMode);
+      setIsFeedbackVisible(settings.isFeedbackVisible);
+      setShowMeasureNumbers(settings.showMeasureNumbers);
+      setHandVisibility({ scoreId: activeScore.id, hiddenHand: settings.hiddenHand });
+    });
+
+    const masterGain = masterGainRef.current;
+    if (masterGain) {
+      masterGain.gain.setTargetAtTime(
+        settings.volume / 100,
+        masterGain.context.currentTime,
+        0.01
+      );
+    }
+  }, [activeScore]);
+
+  useEffect(() => {
+    if (!activeScore) return;
+    const storageKey = songPracticeSettingsKey(activeScore.id, activeScore.user_id);
+    if (settingsScoreKeyRef.current !== storageKey) return;
+
+    const settings: SongPracticeSettings = {
+      bpm,
+      volume,
+      playbackMode,
+      repeatMode,
+      isFeedbackVisible,
+      showMeasureNumbers,
+      hiddenHand: handVisibility.scoreId === activeScore.id
+        ? handVisibility.hiddenHand
+        : null,
+    };
+    const serialized = JSON.stringify(settings);
+    if (restoringSettingsSnapshotRef.current !== null) {
+      if (serialized === restoringSettingsSnapshotRef.current) {
+        restoringSettingsSnapshotRef.current = null;
+      }
+      return;
+    }
+    localStorage.setItem(storageKey, serialized);
+  }, [
+    activeScore,
+    bpm,
+    handVisibility,
+    isFeedbackVisible,
+    playbackMode,
+    repeatMode,
+    showMeasureNumbers,
+    volume,
+  ]);
 
   const [activeScoreData, setActiveScoreData] = useState<string | null>(null);
 
@@ -1616,6 +1683,21 @@ function PracticePageContent() {
                 : "h-[85%] max-h-[360px]"
             }`}
           >
+            {renderer === notationPracticeRenderer && (
+              <button
+                type="button"
+                onClick={() => setShowMeasureNumbers(current => !current)}
+                aria-pressed={showMeasureNumbers}
+                title={`${showMeasureNumbers ? "Hide" : "Show"} measure numbers`}
+                className={`absolute right-2 top-2 z-40 rounded border px-2 py-1 text-[9px] font-semibold tracking-wide transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
+                  showMeasureNumbers
+                    ? "border-indigo-400/60 bg-indigo-950/90 text-indigo-200"
+                    : "border-neutral-700 bg-neutral-900/80 text-neutral-400 hover:border-neutral-600 hover:text-neutral-200"
+                }`}
+              >
+                Measure #
+              </button>
+            )}
             {showsPianoHandControls && (
               <div className="absolute left-full ml-2 inset-y-0 z-40 w-8" aria-label="Piano hand visibility">
                 {(["right", "left"] as const).map((hand, index) => {
@@ -1692,6 +1774,7 @@ function PracticePageContent() {
                         parsedInst,
                         onRenderedNotes: handleRenderedNotes,
                         feedbackByBeatId,
+                        showMeasureNumbers,
                       })}
                     </div>
                     {renderer.renderStationaryOverlay?.(displaySong, positionedSegments, {

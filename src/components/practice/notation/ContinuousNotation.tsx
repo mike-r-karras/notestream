@@ -41,12 +41,14 @@ export function ContinuousNotation({
   offsetX,
   viewportWidth,
   onRenderedNotes,
+  showMeasureNumbers = false,
 }: {
   document: EasyScoreDocument;
   segments: PositionedSegment[];
   offsetX: number;
   viewportWidth: number;
   onRenderedNotes?: (notes: RenderedNoteRegistry) => void;
+  showMeasureNumbers?: boolean;
 }) {
   const hostRef = React.useRef<HTMLDivElement>(null);
   const { resolvedTheme } = useTheme();
@@ -530,6 +532,32 @@ export function ContinuousNotation({
           });
         }
       });
+      if (svg && showMeasureNumbers) {
+        const svgNamespace = 'http://www.w3.org/2000/svg';
+        const numberLayer = globalThis.document.createElementNS(svgNamespace, 'g');
+        numberLayer.classList.add('notestream-measure-numbers');
+        numberLayer.setAttribute('fill', 'var(--theme-staff-muted)');
+        numberLayer.setAttribute('stroke', 'none');
+        numberLayer.setAttribute('aria-label', 'Measure numbers');
+        const labelY = top + (staffNumbers.length - 1) * staffGap + 58;
+
+        measures.forEach((measure, measureIndex) => {
+          if (measureIndex < renderWindow.startIndex || measureIndex > renderWindow.endIndex) return;
+          const segment = segments[measureIndex];
+          if (!segment) return;
+          const text = globalThis.document.createElementNS(svgNamespace, 'text');
+          text.setAttribute('x', `${segment.x - renderWindow.left + 5}`);
+          text.setAttribute('y', `${labelY}`);
+          text.setAttribute('font-family', 'Arial, Helvetica, sans-serif');
+          text.setAttribute('font-size', '10');
+          text.setAttribute('font-weight', '500');
+          text.setAttribute('fill', 'var(--theme-staff-muted)');
+          text.setAttribute('stroke', 'none');
+          text.textContent = `${measure.number ?? measureIndex + 1}`;
+          numberLayer.appendChild(text);
+        });
+        svg.appendChild(numberLayer);
+      }
       if (svg && lyricAnchors.length > 0) {
         const svgNamespace = 'http://www.w3.org/2000/svg';
         const lyricColor = 'var(--theme-chord-text)';
@@ -612,6 +640,7 @@ export function ContinuousNotation({
     renderWindow.right,
     renderWindow.startIndex,
     resolvedTheme,
+    showMeasureNumbers,
   ]);
 
   const totalWidth = Math.max(
