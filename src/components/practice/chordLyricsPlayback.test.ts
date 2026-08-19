@@ -4,6 +4,7 @@ import type { EasyScoreDocument, InstrumentConfig } from '../../types/easyScore'
 import { buildExpectedNoteEvents } from './detection/scoreExpectedEvents';
 import {
   buildChordLyricsPlaybackModel,
+  chordTonesForSymbol,
   namedPitchToMidi,
 } from './chordLyricsPlayback';
 
@@ -13,6 +14,7 @@ const instrument: InstrumentConfig = {
   chordTones: {
     C: ['G4', 'C4', 'E4', 'G4'],
     G7: ['G4', 'D4', 'F4', 'B4'],
+    Am: ['A4', 'C4', 'E4', 'A4'],
   },
 };
 
@@ -63,5 +65,10 @@ describe('chord/lyric playback model', () => {
     expect(namedPitchToMidi('C#4')).toBe(61);
     expect(namedPitchToMidi('Bb4')).toBe(70);
     expect(namedPitchToMidi('bad')).toBeUndefined();
+  });
+
+  it('uses the base minor chord tones for an unconfigured slash inversion', () => {
+    expect(chordTonesForSymbol(instrument, 'Am/c')).toEqual(['A4', 'C4', 'E4', 'A4']);
+    expect(chordTonesForSymbol(instrument, 'Am/C')).toEqual(['A4', 'C4', 'E4', 'A4']);
   });
 });

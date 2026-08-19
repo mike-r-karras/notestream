@@ -37,6 +37,23 @@ function chordAtBeat(
   );
 }
 
+export function chordTonesForSymbol(
+  instrument: InstrumentConfig | null,
+  symbol: string
+): string[] {
+  const slashMatch = /^(.*)\/([A-Ga-g](?:#|b)?)$/.exec(symbol.trim());
+  const normalizedSymbol = slashMatch
+    ? `${slashMatch[1]}/${slashMatch[2][0].toUpperCase()}${slashMatch[2].slice(1)}`
+    : symbol.trim();
+  const exactTones = instrument?.chordTones?.[normalizedSymbol];
+  if (exactTones) return exactTones;
+
+  // Instrument charts do not always include inversions. Falling back to the
+  // base chord preserves its quality instead of dropping synth/mic playback.
+  const baseSymbol = slashMatch?.[1];
+  return baseSymbol ? (instrument?.chordTones?.[baseSymbol] ?? []) : [];
+}
+
 export function buildChordLyricsPlaybackModel(
   document: EasyScoreDocument,
   instrument: InstrumentConfig | null
@@ -75,7 +92,7 @@ export function buildChordLyricsPlaybackModel(
       const tick = segment.startTick + beat * payload.beatTicks;
       beats.push({ tick, measure: measureNumber, beat, accent: beat === 0 });
       const symbol = chordAtBeat(initialChord, changes, beat);
-      (instrument?.chordTones?.[symbol] ?? []).forEach((pitch, toneIndex) => {
+      chordTonesForSymbol(instrument, symbol).forEach((pitch, toneIndex) => {
         const midiNote = namedPitchToMidi(pitch);
         if (midiNote === undefined) return;
         tones.push({

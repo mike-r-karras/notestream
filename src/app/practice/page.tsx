@@ -2190,7 +2190,7 @@ function PracticePageContent() {
                     aria-label={`Open enlarged ${chord} chord diagram`}
                     className="flex flex-col items-center shrink-0 w-[74px] h-[102px] bg-neutral-950 border border-neutral-850 hover:border-indigo-500/60 hover:bg-neutral-900 rounded-xl transition-all select-none pt-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                   >
-                    <span className="text-[10px] font-black text-neutral-300 uppercase leading-none tracking-wider mb-0.5">
+                    <span className="text-[10px] font-black text-neutral-300 leading-none tracking-wider mb-0.5">
                       {chord}
                     </span>
                     <span className="text-[6.5px] font-extrabold text-neutral-300 uppercase tracking-widest leading-none mb-0.5">
