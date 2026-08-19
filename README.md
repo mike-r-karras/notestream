@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000). Set `NEXT_PUBLIC_API_URL` to the API origin used for conversion, authentication, and score storage. Without configured backend services, the frontend and guest library can load, but uploads and authenticated operations will not be fully functional.
+Open [http://localhost:3000](http://localhost:3000). Set `NEXT_PUBLIC_API_URL` to the Notestream authentication and score-storage API origin, and set `NEXT_PUBLIC_CONVERSION_API_URL` to the Audiveris conversion API origin. Without configured backend services, the frontend and guest library can load, but uploads and authenticated operations will not be fully functional.
 
 Available validation commands:
 

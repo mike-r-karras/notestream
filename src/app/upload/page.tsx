@@ -38,7 +38,8 @@ export interface Score {
   score_representation?: string | null;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const CONVERSION_API_URL =
+  process.env.NEXT_PUBLIC_CONVERSION_API_URL || "http://localhost:8080";
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8787";
 
 export default function UploadPage() {
@@ -215,7 +216,7 @@ export default function UploadPage() {
     });
 
     try {
-      const response = await fetch(`${API_URL}/conversions`, {
+      const response = await fetch(`${CONVERSION_API_URL}/conversions`, {
         method: "POST",
         body: formData,
       });
@@ -267,7 +268,7 @@ export default function UploadPage() {
 
     const poll = async () => {
       try {
-        const response = await fetch(`${API_URL}/conversions/${jobId}?timeout=30`, {
+        const response = await fetch(`${CONVERSION_API_URL}/conversions/${jobId}?timeout=30`, {
           signal: abortController.signal,
         });
         if (!response.ok) {
@@ -312,7 +313,9 @@ export default function UploadPage() {
   const saveScoreToDestination = async (completedJob: ConversionJob, originalFileName: string) => {
     try {
       appendLog("storage", "Fetching EasyScore result representation...");
-      const resultRes = await fetch(`${API_URL}/conversions/${completedJob.jobId}/result`);
+      const resultRes = await fetch(
+        `${CONVERSION_API_URL}/conversions/${completedJob.jobId}/result`,
+      );
       let scoreJsonStr = "{}";
       if (resultRes.ok) {
         const scoreJson = await resultRes.json();
@@ -1318,7 +1321,7 @@ export default function UploadPage() {
                   </div>
                   <div className="mt-2 pt-2 border-t border-emerald-500/10 flex flex-col gap-1.5">
                     <a
-                      href={`${API_URL}/conversions/${job.jobId}/result`}
+                      href={`${CONVERSION_API_URL}/conversions/${job.jobId}/result`}
                       download
                       target="_blank"
                       rel="noopener noreferrer"

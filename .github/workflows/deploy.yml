@@ -19,6 +19,7 @@ jobs:
     timeout-minutes: 30
     env:
       NEXT_PUBLIC_API_URL: https://notestream-api.mike-r-karras.workers.dev
+      NEXT_PUBLIC_CONVERSION_API_URL: https://audiveris-api-hjll6wnp3a-uc.a.run.app
 
     steps:
       - name: Check out repository
