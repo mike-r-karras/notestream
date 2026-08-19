@@ -116,7 +116,7 @@ function SignatureGroup({
   return (
     <div
       ref={hostRef}
-      className="notestream-stationary-signature absolute inset-y-0 pointer-events-none overflow-hidden bg-neutral-950 border-r border-neutral-800/80"
+      className="notestream-stationary-signature absolute inset-y-0 pointer-events-none overflow-hidden bg-neutral-950"
       style={{
         left: signature.left,
         width,
