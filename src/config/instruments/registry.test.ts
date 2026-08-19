@@ -9,6 +9,8 @@ describe('instrument registry', () => {
     expect(config?.tuning).toEqual(['G4', 'C4', 'E4', 'A4']);
     expect(config?.chords.C7).toEqual([0, 0, 0, 1]);
     expect(config?.chordTones?.C7).toEqual(['G4', 'C4', 'E4', 'A#4']);
+    expect(config?.chords['C#dim7']).toEqual([0, 1, 0, 1]);
+    expect(config?.chordTones?.['C#dim7']).toEqual(['G4', 'C#4', 'E4', 'A#4']);
     expect(getInstrumentConfig('uke')).toBe(config);
   });
 
@@ -17,4 +19,3 @@ describe('instrument registry', () => {
     expect(getInstrumentConfig('piano')).toBeNull();
   });
 });
-
